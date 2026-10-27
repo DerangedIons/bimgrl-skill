@@ -1,0 +1,7 @@
+name = "BimgrlJulia"
+[deps]
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+SparseConnectivityTracer = "9f842d2f-2579-4b1d-911e-f412cf18a3f5"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
