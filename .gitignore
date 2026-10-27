@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.so
+*.egg-info/
+build/
+/scripts/jl/Manifest.toml
+.bimgrl-workspace/
+scripts/jl/instantiate.log
