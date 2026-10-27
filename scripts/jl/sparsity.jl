@@ -1,7 +1,7 @@
 # Jacobian sparsity of a Julia model by SparseConnectivityTracer (survives branches that
 # Symbolics cannot trace), written as JSON for `bimgrl`'s structure analysis.
 #
-#   julia --project=<skill-dir>/scripts/jl sparsity.jl <model.jl> <out.json>
+#   julia --startup-file=no --project=<skill-dir>/scripts/jl sparsity.jl <model.jl> <out.json>
 
 using SparseConnectivityTracer
 using JSON

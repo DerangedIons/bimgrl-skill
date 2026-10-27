@@ -111,11 +111,18 @@ class SubprocessAdapter(Adapter):
         assert self.proc.stdin and self.proc.stdout
         self.proc.stdin.write(json.dumps(request) + "\n")
         self.proc.stdin.flush()
-        line = self.proc.stdout.readline()
-        if not line:
-            err = self.proc.stderr.read() if self.proc.stderr else ""
-            raise SystemExit(f"the adapter exited without answering {request.get('op')}: {err[-2000:]}")
-        reply = json.loads(line)
+        # a startup banner or a stray print before the reply is skipped: the reply is the
+        # first line that parses as a JSON object
+        while True:
+            line = self.proc.stdout.readline()
+            if not line:
+                raise SystemExit(f"the adapter exited without answering {request.get('op')} (start Julia with --startup-file=no; check stderr)")
+            if line.lstrip().startswith("{"):
+                try:
+                    reply = json.loads(line)
+                    break
+                except json.JSONDecodeError:
+                    continue
         if "error" in reply:
             raise SystemExit(f"adapter error on {request.get('op')}: {reply['error']}")
         return reply
@@ -181,7 +188,10 @@ def open_adapter(spec: str, ws=None) -> Adapter:
     if spec.startswith("cmd:"):
         import shlex
 
-        return SubprocessAdapter(shlex.split(spec[4:]), cwd=ws.model_dir if ws else None)
+        argv = shlex.split(spec[4:])
+        if argv and Path(argv[0]).name == "julia" and "--startup-file=no" not in argv:
+            argv.insert(1, "--startup-file=no")  # a startup.jl must not print on stdout
+        return SubprocessAdapter(argv, cwd=ws.model_dir if ws else None)
     if spec.startswith("so:"):
         _, lib, meta = spec.split(":", 2)
         info = json.loads(Path(meta).read_text())

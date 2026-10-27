@@ -1,6 +1,6 @@
 # JSON-lines RHS adapter for a Julia model, serving `bimgrl`'s native path.
 #
-#   julia --project=<skill-dir>/scripts/jl adapter.jl <model.jl> [--params params.json]
+#   julia --startup-file=no --project=<skill-dir>/scripts/jl adapter.jl <model.jl> [--params params.json]
 #
 # <model.jl> is a Julia file that defines, after being `include`d:
 #   const STATES :: Vector{String}        state names, in the order of u
