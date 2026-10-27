@@ -1,0 +1,23 @@
+{
+  "skill": "bimgrl",
+  "evals": [
+    {
+      "id": "tt06-from-ode",
+      "prompt": "Here is the ten Tusscher-Panfilov 2006 epicardial model as a gotranx .ode file at evals/fixtures/tt06/model.ode. Find what limits its time step under generalized Rush-Larsen, propose BIMGRL blocks, and tell me the speed-up at the moderate biomarker thresholds.",
+      "expected_output": "Runs intake (confirms V, Ca_i, Ca_SR, Ca_ss, R_prime, gates m/h/j), structure, invariants (total Ca with weights V_c/V_sr and V_ss/V_sr, all currents accounted), reference, stiffness (m gate near -990 /ms, forward-Euler limit 2 us, no implicit-step-limited mode), proposes two sub-step blocks and no implicit block, sweeps GRL and BIMGRL, reports GRL passing moderate at 0.025 ms and BIMGRL at 0.25 ms, speed-up about 6x; mentions fCass and the SR in the dyad as judgment calls.",
+      "files": ["evals/fixtures/tt06/model.ode"]
+    },
+    {
+      "id": "conservation-flag",
+      "prompt": "I think one of the Markov chains in my model (evals/fixtures/tt06/model.ode is a stand-in; the real one is T-World) is written wrong. Can your conservation check tell me which rate is inconsistent before we add implicit blocks?",
+      "expected_output": "Explains the stoichiometric check (column sums of the chain's atoms under unit weights), runs bimgrl invariants, and when a chain is flagged improper reports the atom and the column coefficients that break the sum, refuses to block an improper chain, and asks whether to fix the model.",
+      "files": ["evals/fixtures/tt06/model.ode"]
+    },
+    {
+      "id": "native-julia",
+      "prompt": "My model is a hand-optimised Julia f(du,u,p,t) that I cannot translate. What can you still do to find its stiff modes and whether GRL would conserve its chains, and how would I validate a hand-written block scheme?",
+      "expected_output": "Describes the native path: the JSON-lines adapter served by scripts/jl/adapter.jl with ForwardDiff, a trace from the user's code for checkpoints, bimgrl stiffness --adapter and invariants --adapter, implementing blocks per references/implementing-blocks.md, and validation through the trace contract with bimgrl validate against a Rodas5P reference from scripts/jl/reference.jl.",
+      "files": []
+    }
+  ]
+}

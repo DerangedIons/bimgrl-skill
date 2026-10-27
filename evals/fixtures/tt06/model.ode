@@ -1,0 +1,321 @@
+states("calcium_dynamics",
+Ca_SR=ScalarParam(3.64, unit="mM", description=""),
+Ca_i=ScalarParam(0.000126, unit="mM", description=""),
+Ca_ss=ScalarParam(0.00036, unit="mM", description=""),
+R_prime=ScalarParam(0.9073, unit="1", description="")
+)
+
+states("potassium_dynamics",
+K_i=ScalarParam(136.89, unit="mM", description="")
+)
+
+states("sodium_dynamics",
+Na_i=ScalarParam(8.604, unit="mM", description="")
+)
+
+states("membrane",
+V=ScalarParam(-85.23, unit="mV", description="")
+)
+
+states("rapid_time_dependent_potassium_current_Xr1_gate",
+Xr1=ScalarParam(0.00621, unit="1", description="")
+)
+
+states("rapid_time_dependent_potassium_current_Xr2_gate",
+Xr2=ScalarParam(0.4712, unit="1", description="")
+)
+
+states("slow_time_dependent_potassium_current_Xs_gate",
+Xs=ScalarParam(0.0095, unit="1", description="")
+)
+
+states("L_type_Ca_current_d_gate",
+d=ScalarParam(3.373e-5, unit="1", description="")
+)
+
+states("L_type_Ca_current_f_gate",
+f=ScalarParam(0.7888, unit="1", description="")
+)
+
+states("L_type_Ca_current_f2_gate",
+f2=ScalarParam(0.9755, unit="1", description="")
+)
+
+states("L_type_Ca_current_fCass_gate",
+fCass=ScalarParam(0.9953, unit="1", description="")
+)
+
+states("fast_sodium_current_h_gate",
+h=ScalarParam(0.7444, unit="1", description="")
+)
+
+states("fast_sodium_current_j_gate",
+j=ScalarParam(0.7045, unit="1", description="")
+)
+
+states("fast_sodium_current_m_gate",
+m=ScalarParam(0.00172, unit="1", description="")
+)
+
+states("transient_outward_current_r_gate",
+r=ScalarParam(2.42e-8, unit="1", description="")
+)
+
+states("transient_outward_current_s_gate",
+s=ScalarParam(0.999998, unit="1", description="")
+)
+
+parameters("calcium_dynamics",
+Buf_c=ScalarParam(0.2, unit="mM", description=""),
+Buf_sr=ScalarParam(10.0, unit="mM", description=""),
+Buf_ss=ScalarParam(0.4, unit="mM", description=""),
+Ca_o=ScalarParam(2.0, unit="mM", description=""),
+EC=ScalarParam(1.5, unit="mM", description=""),
+K_buf_c=ScalarParam(0.001, unit="mM", description=""),
+K_buf_sr=ScalarParam(0.3, unit="mM", description=""),
+K_buf_ss=ScalarParam(0.00025, unit="mM", description=""),
+K_up=ScalarParam(0.00025, unit="mM", description=""),
+V_leak=ScalarParam(0.00036, unit="mS/uF", description=""),
+V_rel=ScalarParam(0.102, unit="mS/uF", description=""),
+V_sr=ScalarParam(0.001094, unit="um**3", description=""),
+V_ss=ScalarParam(5.468e-05, unit="um**3", description=""),
+V_xfer=ScalarParam(0.0038, unit="mS/uF", description=""),
+Vmax_up=ScalarParam(0.006375, unit="mM/ms", description=""),
+k1_prime=ScalarParam(0.15, unit="1/mM**2/ms", description=""),
+k2_prime=ScalarParam(0.045, unit="1/mM/ms", description=""),
+k3=ScalarParam(0.06, unit="mS/uF", description=""),
+k4=ScalarParam(0.005, unit="mS/uF", description=""),
+max_sr=ScalarParam(2.5, unit="1", description=""),
+min_sr=ScalarParam(1.0, unit="1", description="")
+)
+
+parameters("membrane",
+Cm=ScalarParam(0.185, unit="uF", description=""),
+F=ScalarParam(96485.3415, unit="C/mmol", description=""),
+R=ScalarParam(8314.472, unit="J/mol/K", description=""),
+T=ScalarParam(310.0, unit="K", description=""),
+V_c=ScalarParam(0.016404, unit="um**3", description=""),
+stim_amplitude=ScalarParam(-52.0, unit="A/F", description=""),
+stim_duration=ScalarParam(1.0, unit="ms", description=""),
+stim_eps=ScalarParam(1e-09, unit="ms", description=""),
+stim_period=ScalarParam(1000.0, unit="ms", description=""),
+stim_start=ScalarParam(10.0, unit="ms", description="")
+)
+
+parameters("sodium_calcium_exchanger_current",
+K_NaCa=ScalarParam(1000.0, unit="A/F", description=""),
+K_sat=ScalarParam(0.1, unit="1", description=""),
+Km_Ca=ScalarParam(1.38, unit="mM", description=""),
+Km_Nai=ScalarParam(87.5, unit="mM", description=""),
+alpha=ScalarParam(2.5, unit="1", description=""),
+gamma_=ScalarParam(0.35, unit="1", description="")
+)
+
+parameters("sodium_potassium_pump_current",
+K_mNa=ScalarParam(40.0, unit="mM", description=""),
+K_mk=ScalarParam(1.0, unit="mM", description=""),
+P_NaK=ScalarParam(2.724, unit="A/F", description="")
+)
+
+parameters("potassium_dynamics",
+K_o=ScalarParam(5.4, unit="mM", description="")
+)
+
+parameters("calcium_pump_current",
+K_pCa=ScalarParam(0.0005, unit="mM", description=""),
+g_pCa=ScalarParam(0.1238, unit="A/F", description="")
+)
+
+parameters("sodium_dynamics",
+Na_o=ScalarParam(140.0, unit="mM", description="")
+)
+
+parameters("reversal_potentials",
+P_kna=ScalarParam(0.03, unit="1", description="")
+)
+
+parameters("L_type_Ca_current",
+g_CaL=ScalarParam(3.98e-05, unit="L/F/s", description="")
+)
+
+parameters("inward_rectifier_potassium_current",
+g_K1=ScalarParam(5.405, unit="mS/uF", description="")
+)
+
+parameters("rapid_time_dependent_potassium_current",
+g_Kr=ScalarParam(0.153, unit="mS/uF", description="")
+)
+
+parameters("slow_time_dependent_potassium_current",
+g_Ks=ScalarParam(0.392, unit="mS/uF", description="")
+)
+
+parameters("fast_sodium_current",
+g_Na=ScalarParam(14.838, unit="mS/uF", description="")
+)
+
+parameters("calcium_background_current",
+g_bca=ScalarParam(0.000592, unit="mS/uF", description="")
+)
+
+parameters("sodium_background_current",
+g_bna=ScalarParam(0.00029, unit="mS/uF", description="")
+)
+
+parameters("potassium_pump_current",
+g_pK=ScalarParam(0.0146, unit="mS/uF", description="")
+)
+
+parameters("transient_outward_current",
+g_to=ScalarParam(0.294, unit="mS/uF", description="")
+)
+
+expressions("calcium_dynamics")
+Ca_i_bufc = 1.0/((Buf_c*K_buf_c)/((Ca_i + K_buf_c)**2) + 1.0)
+Ca_sr_bufsr = 1.0/((Buf_sr*K_buf_sr)/((Ca_SR + K_buf_sr)**2) + 1.0)
+Ca_ss_bufss = 1.0/((Buf_ss*K_buf_ss)/((Ca_ss + K_buf_ss)**2) + 1.0)
+O_ = (R_prime*(Ca_ss**2*k1))/(Ca_ss**2*k1 + k3)
+i_leak = V_leak*(Ca_SR - Ca_i) # mM/ms
+i_rel = (O_*V_rel)*(Ca_SR - Ca_ss) # mM/ms
+i_up = Vmax_up/(1.0 + K_up**2/(Ca_i**2)) # mM/ms
+i_xfer = V_xfer*(-Ca_i + Ca_ss) # mM/ms
+k1 = k1_prime/kcasr # 1/mM**2/ms
+k2 = k2_prime*kcasr # 1/mM/ms
+kcasr = max_sr - (max_sr - min_sr)/((EC/Ca_SR)**2 + 1.0)
+dCa_SR_dt = Ca_sr_bufsr*(i_up - (i_leak + i_rel)) # mM
+dCa_i_dt = Ca_i_bufc*(-Cm*(1.0*(-2.0*i_NaCa + (i_b_Ca + i_p_Ca)))/(F*((2.0*1.0)*V_c)) + (i_xfer + (V_sr*(i_leak - i_up))/V_c)) # mM
+dCa_ss_dt = Ca_ss_bufss*(((Cm*((-1*1.0)*i_CaL))/((F*((2.0*1.0)*V_ss))) + (V_sr*i_rel)/V_ss) - V_c*i_xfer/V_ss) # mM
+dR_prime_dt = R_prime*(Ca_ss*(-k2)) + k4*(1.0 - R_prime)
+
+expressions("reversal_potentials")
+E_Ca = (((0.5*R)*T)/F)*log(Ca_o/Ca_i) # mV
+E_K = ((R*T)/F)*log(K_o/K_i) # mV
+E_Ks = ((R*T)/F)*log((K_o + Na_o*P_kna)/(K_i + Na_i*P_kna)) # mV
+E_Na = ((R*T)/F)*log(Na_o/Na_i) # mV
+
+expressions("inward_rectifier_potassium_current")
+alpha_K1 = 0.1/(exp(0.06*((-E_K + V) - 1*200.0)) + 1.0)
+beta_K1 = (3.0*exp(0.0002*((-E_K + V) + 100.0)) + exp(0.1*((-E_K + V) - 1*10.0)))/(exp((-1*0.5)*(-E_K + V)) + 1.0)
+i_K1 = (sqrt(K_o/5.4)*(g_K1*xK1_inf))*(-E_K + V) # A/F
+xK1_inf = alpha_K1/(alpha_K1 + beta_K1)
+
+expressions("L_type_Ca_current_d_gate")
+alpha_d = 0.25 + 1.4/(exp((-V - 1*35.0)/13.0) + 1.0)
+beta_d = 1.4/(exp((V + 5.0)/5.0) + 1.0)
+d_inf = 1.0/(exp((-V - 1*8.0)/7.5) + 1.0)
+gamma_d = 1.0/(exp((50.0 - V)/20.0) + 1.0) # ms
+tau_d = (1.0*alpha_d)*beta_d + gamma_d # ms
+dd_dt = (-d + d_inf)/tau_d
+
+expressions("fast_sodium_current_h_gate")
+alpha_h = Conditional(Lt(V, -1*40.0), 0.057*exp((-(V + 80.0))/6.8), 0.0) # mS/uF
+beta_h = Conditional(Lt(V, -1*40.0), 2.7*exp(0.079*V) + 310000.0*exp(0.3485*V), 0.77/((0.13*(exp((V + 10.66)/((-1*11.1))) + 1.0)))) # mS/uF
+h_inf = 1.0/((exp((V + 71.55)/7.43) + 1.0)**2)
+tau_h = 1.0/(alpha_h + beta_h) # ms
+dh_dt = (-h + h_inf)/tau_h
+
+expressions("fast_sodium_current_j_gate")
+alpha_j = Conditional(Lt(V, -1*40.0), (((V + 37.78)*((-1*25428.0)*exp(0.2444*V) - 6.948e-6*exp((-1*0.04391)*V)))/1.0)/(exp(0.311*(V + 79.23)) + 1.0), 0.0) # mS/uF
+beta_j = Conditional(Lt(V, -1*40.0), (0.02424*exp((-1*0.01052)*V))/(exp((-1*0.1378)*(V + 40.14)) + 1.0), (0.6*exp(0.057*V))/(exp((-1*0.1)*(V + 32.0)) + 1.0)) # mS/uF
+j_inf = 1.0/((exp((V + 71.55)/7.43) + 1.0)**2)
+tau_j = 1.0/(alpha_j + beta_j) # ms
+dj_dt = (-j + j_inf)/tau_j
+
+expressions("fast_sodium_current_m_gate")
+alpha_m = 1.0/(exp((-V - 1*60.0)/5.0) + 1.0)
+beta_m = 0.1/(exp((V + 35.0)/5.0) + 1.0) + 0.1/(exp((V - 1*50.0)/200.0) + 1.0)
+m_inf = 1.0/((exp((-V - 1*56.86)/9.03) + 1.0)**2)
+tau_m = (1.0*alpha_m)*beta_m # ms
+dm_dt = (-m + m_inf)/tau_m
+
+expressions("rapid_time_dependent_potassium_current_Xr1_gate")
+alpha_xr1 = 450.0/(exp((-V - 1*45.0)/10.0) + 1.0)
+beta_xr1 = 6.0/(exp((V + 30.0)/11.5) + 1.0)
+tau_xr1 = (1.0*alpha_xr1)*beta_xr1 # ms
+xr1_inf = 1.0/(exp((-V - 1*26.0)/7.0) + 1.0)
+dXr1_dt = (-Xr1 + xr1_inf)/tau_xr1
+
+expressions("rapid_time_dependent_potassium_current_Xr2_gate")
+alpha_xr2 = 3.0/(exp((-V - 1*60.0)/20.0) + 1.0)
+beta_xr2 = 1.12/(exp((V - 1*60.0)/20.0) + 1.0)
+tau_xr2 = (1.0*alpha_xr2)*beta_xr2 # ms
+xr2_inf = 1.0/(exp((V + 88.0)/24.0) + 1.0)
+dXr2_dt = (-Xr2 + xr2_inf)/tau_xr2
+
+expressions("slow_time_dependent_potassium_current_Xs_gate")
+alpha_xs = 1400.0/(sqrt(exp((5.0 - V)/6.0) + 1.0))
+beta_xs = 1.0/(exp((V - 1*35.0)/15.0) + 1.0)
+tau_xs = (1.0*alpha_xs)*beta_xs + 80.0 # ms
+xs_inf = 1.0/(exp((-V - 1*5.0)/14.0) + 1.0)
+dXs_dt = (-Xs + xs_inf)/tau_xs
+
+expressions("L_type_Ca_current_f2_gate")
+f2_inf = 0.33 + 0.67/(exp((V + 35.0)/7.0) + 1.0)
+tau_f2 = (562.0*exp((-(V + 27.0)**2)/240.0) + 31.0/(exp((25.0 - V)/10.0) + 1.0)) + 80.0/(exp((V + 30.0)/10.0) + 1.0) # ms
+df2_dt = (-f2 + f2_inf)/tau_f2
+
+expressions("L_type_Ca_current_fCass_gate")
+fCass_inf = 0.4 + 0.6/((Ca_ss/0.05)**2 + 1.0)
+tau_fCass = 2.0 + 80.0/((Ca_ss/0.05)**2 + 1.0) # ms
+dfCass_dt = (-fCass + fCass_inf)/tau_fCass
+
+expressions("L_type_Ca_current_f_gate")
+f_inf = 1.0/(exp((V + 20.0)/7.0) + 1.0)
+tau_f = ((1102.5*exp((-(V + 27.0)**2)/225.0) + 200.0/(exp((13.0 - V)/10.0) + 1.0)) + 180.0/(exp((V + 30.0)/10.0) + 1.0)) + 20.0 # ms
+df_dt = (-f + f_inf)/tau_f
+
+expressions("L_type_Ca_current")
+i_CaL = (((F**2*(((fCass*(f2*(f*(d*g_CaL))))*4.0)*(V - 1*15.0)))/((R*T)))*(-Ca_o + (0.25*Ca_ss)*exp((F*(2.0*(V - 1*15.0)))/((R*T)))))/(exp((F*(2.0*(V - 1*15.0)))/((R*T))) - 1*1.0) # A/F
+
+expressions("rapid_time_dependent_potassium_current")
+i_Kr = (Xr2*(Xr1*(g_Kr*sqrt(K_o/5.4))))*(-E_K + V) # A/F
+
+expressions("slow_time_dependent_potassium_current")
+i_Ks = (Xs**2*g_Ks)*(-E_Ks + V) # A/F
+
+expressions("fast_sodium_current")
+i_Na = (j*(h*(g_Na*m**3)))*(-E_Na + V) # A/F
+
+expressions("sodium_calcium_exchanger_current")
+i_NaCa = (K_NaCa*(Ca_o*(Na_i**3*exp((F*(V*gamma_))/((R*T)))) - alpha*Ca_i*(Na_o**3*exp((F*(V*(gamma_ - 1*1.0)))/((R*T))))))/((((Ca_o + Km_Ca)*(Km_Nai**3 + Na_o**3))*(K_sat*exp((F*(V*(gamma_ - 1*1.0)))/((R*T))) + 1.0))) # A/F
+
+expressions("sodium_potassium_pump_current")
+i_NaK = ((Na_i*((K_o*P_NaK)/(K_mk + K_o)))/(K_mNa + Na_i))/((0.1245*exp((F*((-1*0.1)*V))/((R*T))) + 1.0) + 0.0353*exp((F*(-V))/((R*T)))) # A/F
+
+expressions("membrane")
+i_Stim = Conditional(And(Ge(stim_eps, -stim_phase), Gt(stim_duration, stim_eps + stim_phase_mod)), stim_amplitude, 0.0) # A/F
+stim_phase = -stim_start + time # ms
+stim_phase_mod = -stim_period*floor((stim_eps + stim_phase)/stim_period) + stim_phase # ms
+dV_dt = ((-1*1.0)/1.0)*(i_Stim + (i_p_Ca + (i_p_K + (i_b_Ca + (i_NaCa + (i_b_Na + (i_Na + (i_NaK + (i_CaL + (i_Ks + (i_Kr + (i_K1 + i_to)))))))))))) # mV
+
+expressions("calcium_background_current")
+i_b_Ca = g_bca*(-E_Ca + V) # A/F
+
+expressions("sodium_background_current")
+i_b_Na = g_bna*(-E_Na + V) # A/F
+
+expressions("calcium_pump_current")
+i_p_Ca = (Ca_i*g_pCa)/(Ca_i + K_pCa) # A/F
+
+expressions("potassium_pump_current")
+i_p_K = (g_pK*(-E_K + V))/(exp((25.0 - V)/5.98) + 1.0) # A/F
+
+expressions("transient_outward_current")
+i_to = (s*(g_to*r))*(-E_K + V) # A/F
+
+expressions("transient_outward_current_r_gate")
+r_inf = 1.0/(exp((20.0 - V)/6.0) + 1.0)
+tau_r = 9.5*exp((-(V + 40.0)**2)/1800.0) + 0.8 # ms
+dr_dt = (-r + r_inf)/tau_r
+
+expressions("transient_outward_current_s_gate")
+s_inf = 1.0/(exp((V + 20.0)/5.0) + 1.0)
+tau_s = (85.0*exp((-(V + 45.0)**2)/320.0) + 5.0/(exp((V - 1*20.0)/5.0) + 1.0)) + 3.0 # ms
+ds_dt = (-s + s_inf)/tau_s
+
+expressions("potassium_dynamics")
+dK_i_dt = Cm*(((-1*1.0)*(-2.0*i_NaK + (i_Stim + (i_p_K + (i_Ks + (i_Kr + (i_K1 + i_to)))))))/((F*(1.0*V_c)))) # mM
+
+expressions("sodium_dynamics")
+dNa_i_dt = Cm*(((-1*1.0)*(3.0*i_NaCa + (3.0*i_NaK + (i_Na + i_b_Na))))/((F*(1.0*V_c)))) # mM
+

@@ -1,0 +1,6 @@
+interface:
+  display_name: "BIMGRL"
+  short_description: "Accelerate a cardiac cell model with block-implicit multirate Rush-Larsen"
+  default_prompt: "Use $bimgrl to analyse the stiffness and conservation laws of this cell model and propose BIMGRL blocks"
+policy:
+  allow_implicit_invocation: true
