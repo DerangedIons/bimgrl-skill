@@ -177,6 +177,34 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
     except Exception as e:  # noqa: BLE001
         suggest_msg = f"gotranx suggest-blocks failed: {type(e).__name__}: {e}"
 
+    # every disagreement with gotranx is the user's call at Gate 6; the dyad is not compared because
+    # gotranx does not detect it. Paths stay relative so the text is the same in every workspace
+    if suggested:
+        # compare which states are implicit, then how the states both make implicit are grouped
+        mine_b = [set(b["states"]) for b in implicit]
+        theirs_b = [set(b.states) for b in suggested.blocks.implicit]
+        mine_s, theirs_s = set().union(*mine_b), set().union(*theirs_b)
+        differ = []
+        if theirs_s - mine_s:
+            differ.append(f"it makes {', '.join(sorted(theirs_s - mine_s))} implicit and the rules leave them explicit")
+        if mine_s - theirs_s:
+            differ.append(f"it leaves {', '.join(sorted(mine_s - theirs_s))} explicit and the rules make them implicit")
+        both = mine_s & theirs_s
+        mine_g = {tuple(sorted(b & both)) for b in mine_b if b & both}
+        theirs_g = {tuple(sorted(b & both)) for b in theirs_b if b & both}
+        if mine_g != theirs_g:
+            fmt = lambda gs: " ".join(f"[{', '.join(g)}]" for g in sorted(gs))  # noqa: E731
+            differ.append(f"it groups the states both make implicit differently (rules {fmt(mine_g - theirs_g)}; gotranx {fmt(theirs_g - mine_g)})")
+        mine_v = next((set(s["states"]) for s in substep if s["mode"] == "proportional" and v in s["states"]), set())
+        theirs_v = next((set(b.states) for b in suggested.blocks.substep if v in b.states), set())
+        if mine_v != theirs_v:
+            only = "; ".join(f"only {who}: {', '.join(sorted(d))}" for who, d in (("gotranx", theirs_v - mine_v), ("the rules", mine_v - theirs_v)) if d)
+            differ.append(f"the V block differs ({only})")
+        judgment += [f"gotranx suggest-blocks disagrees: {d}" for d in differ]
+        if differ:
+            judgment.append(f"to settle the gotranx disagreements on numbers, `bimgrl sweep <model_dir> --scheme BIMGRL,BIMGRL-auto "
+                            f"--suggested <model_dir>/bimgrl/blocks_suggested_dt{dt:g}.toml` measures both block sets")
+
     toml = render_toml(implicit, substep, meta.id, round_=1)
     # validate
     try:

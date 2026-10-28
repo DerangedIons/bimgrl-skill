@@ -97,7 +97,7 @@ bimgrl propose <model_dir> [--dt 0.1] [--nest-v-markov]
 
 Applies the paper's rules (`references/block-rules.md`) to the findings: chains of channels and of the release channel, binding clusters that own a stiff mode, SR joined with the junction so the release conserves, V with the INa gates (proportional, atol 0.5 mV), the dyad (binary, triggers on the junctional Ca and the open states), nesting. Every block carries the finding that produced it; gotranx's own `suggest-blocks` is run for comparison; `validate_blocks` checks the file.
 
-**Gate 6** (always): walk the user through the proposed `blocks.toml` block by block, with the reason for each, then the "Judgment calls" list (keep the SR in the dyad? add a Ca-dependent ICaL gate such as TT06's fCass? nest a voltage-dependent chain in the V block?). Record the decisions. This is the paper's "refinements restricted to membership and tolerances": nothing else about the scheme is ever changed.
+**Gate 6** (always): walk the user through the proposed `blocks.toml` block by block, with the reason for each, then the "Judgment calls" list (keep the SR in the dyad? add a Ca-dependent ICaL gate such as TT06's fCass? nest a voltage-dependent chain in the V block?). Every place gotranx `suggest-blocks` disagrees with the rules is in that list: put each one to the user, never settle it alone, and offer the `BIMGRL-auto` sweep the line names so the choice rests on measured error and cost. Record the decisions. This is the paper's "refinements restricted to membership and tolerances": nothing else about the scheme is ever changed.
 
 ### 7. Sweep and validate
 
