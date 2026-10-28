@@ -1,0 +1,23 @@
+{
+  "name": "bimgrl",
+  "description": "The bimgrl skill as a Claude Code plugin.",
+  "owner": {
+    "name": "Kyle Beggs",
+    "email": "kyle@rallypoint1.com"
+  },
+  "plugins": [
+    {
+      "name": "bimgrl",
+      "source": "./",
+      "description": "Apply the BIMGRL block-implicit multirate Rush-Larsen scheme to a cardiac cell model: stiffness and conservation analysis, block proposal, gotranx code generation and dt sweeps against an LSODA reference.",
+      "author": {
+        "name": "Kyle Beggs",
+        "email": "kyle@rallypoint1.com"
+      },
+      "homepage": "https://github.com/DerangedIons/bimgrl-skill",
+      "repository": "https://github.com/DerangedIons/bimgrl-skill",
+      "license": "MIT",
+      "category": "scientific-computing"
+    }
+  ]
+}

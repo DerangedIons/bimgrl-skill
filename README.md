@@ -6,6 +6,14 @@ The problem it solves: generalised Rush–Larsen advances each state alone, expo
 
 ## Install
 
+As a Claude Code plugin (Claude Code 2.1.275 or later). The agent builds the Python environment and installs gotranx on first use (Setup in `SKILL.md`), again after each plugin update since every version is its own copy; gotranx needs access to the fork, see below.
+
+```
+/plugin install bimgrl --marketplace DerangedIons/bimgrl-skill
+```
+
+From a clone, which is also how Codex reads it:
+
 ```sh
 git clone <this repository> ~/dev/bimgrl-skill
 cd ~/dev/bimgrl-skill

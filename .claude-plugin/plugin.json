@@ -1,0 +1,19 @@
+{
+  "name": "bimgrl",
+  "description": "Apply the BIMGRL block-implicit multirate Rush-Larsen scheme to a cardiac cell model: stiffness and conservation analysis, block proposal, gotranx code generation and dt sweeps against an LSODA reference.",
+  "author": {
+    "name": "Kyle Beggs",
+    "email": "kyle@rallypoint1.com"
+  },
+  "homepage": "https://github.com/DerangedIons/bimgrl-skill",
+  "repository": "https://github.com/DerangedIons/bimgrl-skill",
+  "license": "MIT",
+  "keywords": [
+    "cardiac",
+    "electrophysiology",
+    "rush-larsen",
+    "stiff-ode",
+    "gotranx",
+    "deranged-ions"
+  ]
+}
