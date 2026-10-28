@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from . import stiffness
 from .workspace import Workspace, md_table
 
 V_ATOL = 0.5
@@ -40,7 +41,10 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
     comps = meta.compartments
     structure = ws.read_json("structure.json")
     inv = ws.read_json("invariants.json")
-    stiff = ws.read_json("stiffness.json") if (ws.out / "stiffness.json").exists() else None
+    # the default file holds every mode at or below the default threshold, so a stricter threshold
+    # filters it; a looser one needs the probe written by `bimgrl stiffness --threshold` at that value
+    stiff_file = f"{stiffness.artifact(max(stiff_threshold, stiffness.THRESHOLD))}.json"
+    stiff = ws.read_json(stiff_file) if (ws.out / stiff_file).exists() else None
     feeds_v = set(structure["feeds_v"]) | {structure["voltage"]}
     kind_of = {s["name"]: s["kind"] for s in structure["states"]}
 
@@ -88,7 +92,8 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
         else:
             notes.append(f"binding cluster {', '.join(members)} owns no stiff mode (threshold {stiff_threshold:g} /ms): left explicit")
     if stiff is None:
-        judgment.append("no stiffness.json: every binding cluster was treated as non-stiff; run `bimgrl stiffness` first")
+        probe = "" if stiff_threshold <= stiffness.THRESHOLD else f" --threshold {stiff_threshold:g}"
+        judgment.append(f"no {stiff_file}: every binding cluster was treated as non-stiff; run `bimgrl stiffness{probe}` first")
 
     # 3. SR + junction share a block
     sr, junc = comps.sr, comps.junction

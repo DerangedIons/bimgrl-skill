@@ -81,7 +81,7 @@ bimgrl stiffness <model_dir> [--protocol B] [--beats 2] [--every 1.0] [--thresho
 bimgrl stiffness <model_dir> --adapter cmd:"..." --trace trace.csv   # native path
 ```
 
-The Jacobian at the paper's 13 checkpoints plus every millisecond through the last beat; eigenvalues; participation factors $p_{kj} = |V_{kj} W_{jk}|$ normalised per mode; the owners of every mode with Re λ ≤ threshold; the owners' update type under GRL and under RL+FE; the forward Euler limit $2|\mathrm{Re}\,\lambda| / |\lambda|^2$; the P1 prediction (the stiffest mode owned by explicitly advanced states) and the P2 prediction (the largest step at which the linearised scheme step grows no faster than the model, which also sees coupled modes that GRL updates one state at a time). Writes `stiffness.json`, `stiffness.md`.
+The Jacobian at the paper's 13 checkpoints plus every millisecond through the last beat; eigenvalues; participation factors $p_{kj} = |V_{kj} W_{jk}|$ normalised per mode; the owners of every mode with Re λ ≤ threshold; the owners' update type under GRL and under RL+FE; the forward Euler limit $2|\mathrm{Re}\,\lambda| / |\lambda|^2$; the P1 prediction (the stiffest mode owned by explicitly advanced states) and the P2 prediction (the largest step at which the linearised scheme step grows no faster than the model, which also sees coupled modes that GRL updates one state at a time). Writes `stiffness.json`, `stiffness.md`; a run at another `--threshold` is a probe and writes `stiffness_t<threshold>.*` instead, so it never replaces the default file that `propose` and `report` read (`propose --threshold` looser than −20 reads the matching probe).
 
 **Gate.** The agent reads the Table-1 view and names, in words, what limits the step and why: which modes are buffer binding, which are gates, which are chains. It decides alone whether the threshold should be relaxed to show more modes. It does not yet decide blocks.
 
@@ -147,7 +147,7 @@ Timing is serial, in C, best of N, one beat; it must run on an idle machine. The
 | structure | `structure.json`, `structure.md`, `structure.dot` |
 | invariants | `invariants.json`, `invariants.md` (native: `invariants_native.*`) |
 | reference | `reference_A.*`, `reference_B.*`, `reference_B_beats.csv`, `reference.md` |
-| stiffness | `stiffness.json`, `stiffness.md` (native: `stiffness_native.*`) |
+| stiffness | `stiffness.json`, `stiffness.md`; `stiffness_t<threshold>.*` for a non-default `--threshold` (native: `stiffness_native.*`) |
 | sweep | `runs.csv`, `runs_drift.csv`, `stability.json`, `build/`, `traces/` |
 | propose | `blocks_proposed.toml`, `blocks_suggested_dt*.toml`, `propose.md`, `propose.json`, and `../blocks.toml` |
 | codegen | `generated/` |

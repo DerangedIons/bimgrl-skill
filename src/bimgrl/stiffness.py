@@ -21,6 +21,7 @@ from .protocol import protocols
 from .vendored.stiffness import OWNER, fe_limit, p2_checkpoint, participation
 from .workspace import Workspace, md_table
 
+THRESHOLD = -20.0  # Re λ (/ms) below which a mode is stiff, unless the agent probes another
 PAPER_OFFSETS = (-1.0, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 300.0, 500.0)
 
 
@@ -156,11 +157,17 @@ def to_markdown(r: dict) -> str:
     return "\n".join(out)
 
 
-def run(ws: Workspace, protocol: str = "B", beats: int = 2, every_ms: float = 1.0, threshold: float = -20.0) -> dict:
+def artifact(threshold: float = THRESHOLD) -> str:
+    """Base name of the outputs at ``threshold``: a probe at another threshold gets its own file, so it
+    cannot replace the ``stiffness.json`` that propose and report read"""
+    return "stiffness" if threshold == THRESHOLD else f"stiffness_t{threshold:g}"
+
+
+def run(ws: Workspace, protocol: str = "B", beats: int = 2, every_ms: float = 1.0, threshold: float = THRESHOLD) -> dict:
     model = ws.model
     structure = ws.read_json("structure.json")
     proto = protocols(model.meta, beats)[protocol]
     result = analyse(model, structure, proto, every_ms, threshold)
-    ws.write_json("stiffness.json", result)
-    ws.write_md("stiffness.md", to_markdown(result))
+    ws.write_json(f"{artifact(threshold)}.json", result)
+    ws.write_md(f"{artifact(threshold)}.md", to_markdown(result))
     return result

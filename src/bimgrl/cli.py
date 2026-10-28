@@ -69,7 +69,7 @@ def cmd_stiffness(args):
     from . import stiffness
 
     stiffness.run(ws, protocol=args.protocol, beats=args.beats, every_ms=args.every, threshold=args.threshold)
-    print((ws.out / "stiffness.md").read_text())
+    print((ws.out / f"{stiffness.artifact(args.threshold)}.md").read_text())
 
 
 def cmd_convert(args):
