@@ -2,6 +2,10 @@
 
 When the model must stay in its own integrator, the agent implements the two block kinds there. This is the recipe the T-World work converged on after two wrong fixes; the anti-patterns at the end are the ones that passed by eye and failed against the reference.
 
+## The base and the block boundary (BIRL-M)
+
+Everything outside the blocks gets the base update. For BIRL-M that is Rush–Larsen: the exact exponential for the Hodgkin–Huxley gates ($x_{n+1} = x_\infty + (x_n - x_\infty)e^{-h/\tau}$, from the rates at the start of the step) and forward Euler for every other state, which is why every non-gate stiff state must sit in a block. With frozen boundary fluxes, each implicit block's Jacobian is only its internal coupling: the fluxes from states outside the block (membrane currents into a Ca pool, for instance) enter the right-hand side at their start-of-step values and are not differentiated. That makes the block smaller and cheaper to linearise, and what crosses the boundary is still conserved to round-off, because both sides see the same explicit flux. A flux between a sub-step block and a state outside it is not conserved that way: the outside state sees the flux averaged over the starts of the sub-steps.
+
 ## The implicit block for a pool with its buffers
 
 Write the step for the increments, not for the new values. For a pool $c$ with buffers $B_i$ evaluate at the start of the step the binding rates $d_i = k_{on,i}\, c\,(B_{max,i} - B_i) - k_{off,i} B_i$ and their derivatives $a_i = \partial d_i / \partial c = k_{on,i}(B_{max,i} - B_i)$ and $b_i = -\partial d_i / \partial B_i = k_{on,i} c + k_{off,i}$. The linearly implicit (Rosenbrock–Euler) step is

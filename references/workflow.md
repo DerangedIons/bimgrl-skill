@@ -88,32 +88,32 @@ The Jacobian at the paper's 13 checkpoints plus every millisecond through the la
 ## Phase 6: baseline sweep with the drift monitor
 
 ```
-bimgrl sweep <model_dir> --scheme GRL --stability [--dt 0.1,0.05,0.02,0.01,0.005]
+bimgrl sweep <model_dir> --scheme RL --stability [--dt 0.1,0.05,0.02,0.01,0.005]
 ```
 
-GRL at every allowed step from the coarsest down, each run classified ok / nan / unphysical / budget, compared with the reference on the last beat, and every invariant of phase 3 evaluated at the start of every beat. The `--stability` bisection finds the largest step that runs. Writes rows to `runs.csv` (and `runs_drift.csv` for the per-invariant drift) and `stability.json`.
+The baseline is RL (the HH gates exponential, everything else forward Euler), the base of BIRL-M; on the paper's GRL path use `--scheme GRL`. The baseline at every allowed step from the coarsest down, each run classified ok / nan / unphysical / budget, compared with the reference on the last beat, and every invariant of phase 3 evaluated at the start of every beat. The `--stability` bisection finds the largest step that runs. Writes rows to `runs.csv` (and `runs_drift.csv` for the per-invariant drift) and `stability.json`.
 
-**Gate.** The agent compares the measured limit with the P1 and P2 predictions of phase 5 and reports whether they agree (the paper's 0.0077 ms predicted against 0.0079 ms failing). A `DRIFT` flag on a run that otherwise passes the thresholds is the Gauthier case, a scheme that runs but gives the wrong answer; the agent reports it as a finding of its own.
+**Gate.** The agent compares the measured limit with the predictions of phase 5 (RL+FE P1 for RL; GRL P1 and P2 for GRL) and reports whether they agree (the paper's 0.0077 ms predicted against 0.0079 ms failing). A `DRIFT` flag on a run that otherwise passes the thresholds is the Gauthier case, a scheme that runs but gives the wrong answer; the agent reports it as a finding of its own.
 
 ## Phase 7: propose blocks
 
 ```
-bimgrl propose <model_dir> [--dt 0.1] [--threshold -20] [--nest-v-markov] [--no-write]
+bimgrl propose <model_dir> [--base rl|grl] [--dt 0.1] [--threshold -20] [--nest-v-markov] [--no-write]
 ```
 
-The rule engine of `block-rules.md` over the outputs of phases 2, 3 and 5 and the compartments of `meta.toml`: implicit blocks for every channel or release Markov chain and every binding cluster that owns a stiff mode, the SR and the junction joined, the V/INa block, the dyad block, straddling blocks nested. Every block carries the finding that produced it. gotranx's own `suggest-blocks` runs at the target step for comparison; every difference in the implicit blocks or the V block goes into the judgment calls for Gate 6, with the `BIMGRL-auto` sweep that measures both. Writes `<model_dir>/blocks.toml` (unless it exists), `bimgrl/blocks_proposed.toml`, `propose.md`, `propose.json`.
+The rule engine of `block-rules.md` over the outputs of phases 2, 3 and 5 and the compartments of `meta.toml`. With `--base rl` (default, BIRL-M): the HH gates as `stiff_states`, implicit blocks for every channel or release Markov chain, one calcium block over every Ca-carrying state (merged with any chain that shares a state), the V/INa block, straddling blocks nested, `freeze_boundary_fluxes = true`, and the dyad block as a judgment call. With `--base grl` (BIMGRL): every binding cluster that owns a stiff mode, the SR and the junction joined, the V/INa block, the dyad block. Every block carries the finding that produced it. gotranx's own `suggest-blocks` runs at the target step with the same base for comparison; every difference in the implicit blocks or the V block goes into the judgment calls for Gate 6, with the `BIRL-M-auto` (or `BIMGRL-auto`) sweep that measures both. Writes `<model_dir>/blocks.toml` (unless it exists), `bimgrl/blocks_proposed.toml`, `propose.md`, `propose.json`.
 
-**Gate.** The agent walks the user through `propose.md`: each block and its reason, the "left explicit" list, and the "judgment calls" list (the SR in the dyad, Ca-dependent gates such as fCass, a voltage-dependent chain outside the V block). Changes are made in `blocks.toml` and noted in NOTES.md with `bimgrl log --section Blocks --line "..."`.
+**Gate.** The agent walks the user through `propose.md`: each block and its reason, the "left explicit" list, and the "judgment calls" list (the dyad block under the RL base; the SR in the dyad and Ca-dependent gates such as fCass under the GRL base; a voltage-dependent chain outside the V block). Changes are made in `blocks.toml` and noted in NOTES.md with `bimgrl log --section Blocks --line "..."`.
 
 ## Phase 8: sweep and validate
 
 ```
-bimgrl sweep <model_dir> --scheme GRL,BIGRL,BIMGRL [--protocol B] [--beats 10] [--dt ...] [--budget 600] [--blocks FILE] [--suggested FILE] [--stability] [--save-traces] [--time] [--force]
-bimgrl codegen <model_dir> [--backend c|python|julia|cytozoo] [--scheme GRL|BIGRL|BIMGRL] [--blocks FILE] [-o OUT]
+bimgrl sweep <model_dir> --scheme RL,BIRL,BIRL-M [--protocol B] [--beats 10] [--dt ...] [--budget 600] [--blocks FILE] [--suggested FILE] [--stability] [--save-traces] [--time] [--force]
+bimgrl codegen <model_dir> [--backend c|cpp|cuda|python|julia|cytozoo] [--scheme RL|BIRL|BIRL-M|GRL|BIGRL|BIMGRL] [--blocks FILE] [-o OUT]
 bimgrl validate <model_dir> --test trace.csv [--reference ref.csv] [--level moderate|tight] [--name NAME]
 ```
 
-The sweep generates and compiles each scheme once per configuration, runs the dt grid coarsest first and stops after two consecutive steps pass the tight thresholds (or at the budget), and records biomarker errors, pass/fail per threshold set, the physical-range check with the first violating states, the invariant drift, and a cost estimate. `codegen` writes the same schemes for the user's own target. `validate` applies the same checks to a trace produced by any code, against `reference_<protocol>.csv`.
+The labels: `RL`, `BIRL` (implicit blocks only), `BIRL-M` (all blocks, frozen), `BIRL-M-unfrozen`, `BIRL-M-auto` (the `suggest-blocks` file, `--suggested`) on the RL base; `GRL`, `BIGRL`, `BIMGRL`, `BIMGRL-auto` on the GRL base; `FE`. Each label sets its own base, whatever the blocks file says. The sweep generates and compiles each scheme once per configuration, runs the dt grid coarsest first and stops after two consecutive steps pass the tight thresholds (or at the budget), and records biomarker errors, pass/fail per threshold set, the physical-range check with the first violating states, the invariant drift, and a cost estimate. `codegen` writes the same schemes for the user's own target. `validate` applies the same checks to a trace produced by any code, against `reference_<protocol>.csv`.
 
 **Gate.** The agent reads the rows as the tuning log of `thresholds.md` reads them: which step passes which set, where it fails and on which biomarker, whether a failure is a stability loss (nan, unphysical) or an accuracy loss. It decides alone which steps to add with `--dt`.
 
@@ -130,14 +130,14 @@ Only two things may change between rounds: block membership and trigger toleranc
 ## Phase 10: time and report
 
 ```
-bimgrl time <model_dir> [--scheme GRL,BIMGRL] [--protocol B] [--beats 1] [--repeats 5] [--blocks FILE]
-bimgrl sweep <model_dir> --beats 100 --scheme GRL,BIMGRL --dt <chosen steps>
-bimgrl report <model_dir> [--protocol B] [--baseline GRL]
+bimgrl time <model_dir> [--scheme RL,BIRL-M] [--protocol B] [--beats 1] [--repeats 5] [--blocks FILE]
+bimgrl sweep <model_dir> --beats 100 --scheme RL,BIRL-M --dt <chosen steps>
+bimgrl report <model_dir> [--protocol B] [--baseline RL] [--new BIRL-M]
 ```
 
-Timing is serial, in C, best of N, one beat; it must run on an idle machine. The 100-beat sweep at the chosen steps confirms that the configuration picked at beat 10 still holds. The report picks, per scheme and threshold set, the cheapest passing run (not the largest step: heavy sub-stepping can make a larger step slower), the speed-ups at matched accuracy, the measured stability limits against the predictions, the Table-S1 row, and an error-versus-cost figure. Writes `report.md`, `report.json`, `error_vs_cost.png`.
+Timing is serial, in C, best of N, one beat; it must run on an idle machine. The 100-beat sweep at the chosen steps confirms that the configuration picked at beat 10 still holds (in the survey, configurations chosen over 10 beats kept the moderate thresholds over 100 beats in 33 of 39 models for BIRL-M and 28 for RL, the failures just above a threshold). The report picks, per scheme and threshold set, the cheapest passing run (not the largest step: heavy sub-stepping can make a larger step slower), the speed-ups at matched accuracy, the measured stability limits against the predictions, the Table-S1 row, and an error-versus-cost figure. Writes `report.md`, `report.json`, `error_vs_cost.png`.
 
-**Gate.** The agent hands the user `report.md`, the frozen `blocks.toml`, the completed `NOTES.md` and the generated code, and states plainly which thresholds were met at which step and what the speed-up is. On the native path the deliverable is instead the recipe checklist of `implementing-blocks.md` with the validation results.
+**Gate.** The agent hands the user `report.md`, the frozen `blocks.toml`, the completed `NOTES.md` and the generated code, and states plainly which thresholds were met at which step and what the speed-up is. When the target is tissue or a GPU, the single-cell choice is only a starting point: `tissue-and-backends.md`. On the native path the deliverable is instead the recipe checklist of `implementing-blocks.md` with the validation results.
 
 ## Outputs at a glance
 
