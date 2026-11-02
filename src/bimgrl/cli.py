@@ -110,7 +110,7 @@ def cmd_propose(args):
     from . import propose
 
     ws = _ws(args)
-    propose.run(ws, dt=args.dt, stiff_threshold=args.threshold, nest_v_markov=args.nest_v_markov, write=not args.no_write)
+    propose.run(ws, dt=args.dt, stiff_threshold=args.threshold, nest_v_markov=args.nest_v_markov, write=not args.no_write, base=args.base)
     print((ws.out / "propose.md").read_text())
 
 
@@ -142,10 +142,13 @@ def cmd_log(args):
 def cmd_report(args):
     from . import report
 
-    report.run(_ws(args), protocol=args.protocol, baseline=args.baseline)
+    report.run(_ws(args), protocol=args.protocol, baseline=args.baseline, new=args.new)
 
 
 def main(argv=None):
+    from .codegen import BACKENDS
+    from .stepper import SCHEMES
+
     parser = argparse.ArgumentParser(prog="bimgrl", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -212,13 +215,13 @@ def main(argv=None):
 
     p = sub.add_parser("sweep", help="run schemes over the dt grid against the reference, coarsest first")
     p.add_argument("model_dir")
-    p.add_argument("--scheme", default="GRL,BIMGRL", help="comma list of FE,RL,GRL,BIGRL,BIMGRL,BIMGRL-auto")
+    p.add_argument("--scheme", default="RL,BIRL-M", help="comma list of " + ",".join(SCHEMES))
     p.add_argument("--protocol", default="B")
     p.add_argument("--beats", type=int, default=10)
     p.add_argument("--dt", default=None, help="comma list of time steps (default: the 1-2-5 grid, descending until two pass tight)")
     p.add_argument("--budget", type=float, default=600.0, help="seconds per run above which a run is skipped")
     p.add_argument("--blocks", default=None, help="blocks.toml (default <model_dir>/blocks.toml)")
-    p.add_argument("--suggested", default=None, help="blocks file for BIMGRL-auto")
+    p.add_argument("--suggested", default=None, help="blocks file for BIRL-M-auto and BIMGRL-auto")
     p.add_argument("--stability", action="store_true", help="bisect the stability limit of the explicit schemes")
     p.add_argument("--save-traces", action="store_true")
     p.add_argument("--time", action="store_true", help="also time every ok run (serial, best of 5)")
@@ -227,25 +230,27 @@ def main(argv=None):
 
     p = sub.add_parser("time", help="time the ok runs of the sweep (one beat, best of N)")
     p.add_argument("model_dir")
-    p.add_argument("--scheme", default="GRL,BIMGRL")
+    p.add_argument("--scheme", default="RL,BIRL-M")
     p.add_argument("--protocol", default="B")
     p.add_argument("--beats", type=int, default=1)
     p.add_argument("--repeats", type=int, default=5)
     p.add_argument("--blocks", default=None)
     p.set_defaults(func=cmd_time)
 
-    p = sub.add_parser("propose", help="propose blocks.toml by the paper's rules from structure, invariants, stiffness")
+    p = sub.add_parser("propose", help="propose blocks.toml by the rules of the base scheme from structure, invariants, stiffness")
     p.add_argument("model_dir")
+    p.add_argument("--base", default="rl", choices=["rl", "grl"],
+                   help="rl: BIRL-M (Rush-Larsen base, frozen boundary fluxes; default); grl: BIMGRL (the paper's rules)")
     p.add_argument("--dt", type=float, default=0.1, help="target time step for the gotranx suggest-blocks comparison")
     p.add_argument("--threshold", type=float, default=-20.0)
     p.add_argument("--nest-v-markov", action="store_true", help="nest voltage-dependent Markov blocks in the V block")
     p.add_argument("--no-write", action="store_true", help="do not write <model_dir>/blocks.toml")
     p.set_defaults(func=cmd_propose)
 
-    p = sub.add_parser("codegen", help="generate scheme code with gotranx (c, python, julia, cytozoo)")
+    p = sub.add_parser("codegen", help="generate scheme code with gotranx (c, cpp, cuda, python, julia, cytozoo)")
     p.add_argument("model_dir")
-    p.add_argument("--backend", default="c", choices=["c", "python", "julia", "cytozoo"])
-    p.add_argument("--scheme", default="BIMGRL", choices=["FE", "RL", "GRL", "BIGRL", "BIMGRL"])
+    p.add_argument("--backend", default="c", choices=list(BACKENDS))
+    p.add_argument("--scheme", default="BIRL-M", choices=["FE", "RL", "GRL", "BIRL", "BIRL-M", "BIGRL", "BIMGRL"])
     p.add_argument("--blocks", default=None)
     p.add_argument("-o", "--out", default=None)
     p.add_argument("extra", nargs="*", help="extra gotranx flags after --")
@@ -274,7 +279,8 @@ def main(argv=None):
     p = sub.add_parser("report", help="cheapest passing runs, speed-ups, Table-S1 row, error-vs-cost figure")
     p.add_argument("model_dir")
     p.add_argument("--protocol", default="B")
-    p.add_argument("--baseline", default="GRL")
+    p.add_argument("--baseline", default="RL")
+    p.add_argument("--new", default=None, help="the scheme compared with the baseline (default BIRL-M, or BIMGRL against GRL)")
     p.set_defaults(func=cmd_report)
 
     args = parser.parse_args(argv)

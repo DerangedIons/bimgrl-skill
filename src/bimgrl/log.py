@@ -40,7 +40,7 @@ TEMPLATE = """# {name}
 
 ## Promising dt
 
-- (GRL: ...; BIMGRL: ...)
+- (RL: ...; BIRL-M: ...)
 """
 
 

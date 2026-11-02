@@ -8,6 +8,7 @@ import json
 import math
 from pathlib import Path
 
+from .stepper import SCHEMES
 from .validate import passes
 from .workspace import Workspace, md_table
 
@@ -42,10 +43,13 @@ def best(rows: list[dict], meta, protocol: str, scheme: str, set_name: str) -> d
     return min(ok, key=cost) if ok else None
 
 
-def run(ws: Workspace, protocol: str = "B", baseline: str = "GRL") -> dict:
+def run(ws: Workspace, protocol: str = "B", baseline: str = "RL", new: str | None = None) -> dict:
+    """The report of the sweep, with `new` against `baseline` (BIRL-M against RL by default, BIMGRL
+    against GRL when the baseline is GRL)"""
+    new = new or ("BIMGRL" if baseline == "GRL" else "BIRL-M")
     meta = ws.meta
     rows = load_runs(ws)
-    schemes = sorted({r["scheme"] for r in rows if r["protocol"] == protocol}, key=lambda s: ["FE", "RL", "GRL", "BIGRL", "BIMGRL", "BIMGRL-auto"].index(s) if s in ("FE", "RL", "GRL", "BIGRL", "BIMGRL", "BIMGRL-auto") else 99)
+    schemes = sorted({r["scheme"] for r in rows if r["protocol"] == protocol}, key=lambda s: SCHEMES.index(s) if s in SCHEMES else 99)
     table = []
     chosen = {}
     for scheme in schemes:
@@ -93,7 +97,7 @@ def run(ws: Workspace, protocol: str = "B", baseline: str = "GRL") -> dict:
             out.append(f"- predicted: GRL P1 {p1g['limit_ms'] if p1g['limit_ms'] is None else f'{p1g['limit_ms']:.4g} ms'}; GRL P2 {p2g['limit_ms']:.4g} ms; RL+FE P1 {p1r['limit_ms'] if p1r['limit_ms'] is None else f'{p1r['limit_ms']:.4g} ms'}")
     out += ["", "## All runs", "", md_table(["scheme", "dt", "status", "dVpeak (mV)", "dAPD90 (ms)", "dCaT (%)", "dt_act (ms)", "moderate", "tight", "cost (ms/beat)", "drift flags"], status_table)]
     # Table-S1 row
-    bm, bt = chosen.get(("BIMGRL", "moderate")), chosen.get(("BIMGRL", "tight"))
+    bm, bt = chosen.get((new, "moderate")), chosen.get((new, "tight"))
     gm, gt = chosen.get((baseline, "moderate")), chosen.get((baseline, "tight"))
     n_imp = n_sub = 0
     blocks = ws.model_dir / "blocks.toml"
@@ -102,8 +106,8 @@ def run(ws: Workspace, protocol: str = "B", baseline: str = "GRL") -> dict:
         n_imp, n_sub = text.count("[[implicit_blocks]]"), text.count("[[substep_blocks]]")
     row = [meta.name or meta.id, f"{meta.species}, {meta.cell_type}".strip(", "), len(ws.model.names) if ws.ode_path.exists() else "", f"{n_imp} / {n_sub}",
            f"{_f(gm['dt']):g} / {1e3 * cost(gm):.3g}" if gm else "none", f"{_f(bm['dt']):g} / {1e3 * cost(bm):.3g}" if bm else "none",
-           f"{cost(gm) / cost(bm):.3g}" if gm and bm else ("GRL fails" if bm else "-"), f"{cost(gt) / cost(bt):.3g}" if gt and bt else ("GRL fails" if bt else "-")]
-    out += ["", "## Supplementary Table S1 row", "", md_table(["Model", "Species, cell", "States", "Blocks (implicit / sub-step)", "GRL dt (ms) / cost (ms per beat)", "BIMGRL dt (ms) / cost (ms per beat)", "Speed-up, moderate", "Speed-up, tight"], [row])]
+           f"{cost(gm) / cost(bm):.3g}" if gm and bm else (f"{baseline} fails" if bm else "-"), f"{cost(gt) / cost(bt):.3g}" if gt and bt else (f"{baseline} fails" if bt else "-")]
+    out += ["", "## Supplementary Table S1 row", "", md_table(["Model", "Species, cell", "States", "Blocks (implicit / sub-step)", f"{baseline} dt (ms) / cost (ms per beat)", f"{new} dt (ms) / cost (ms per beat)", "Speed-up, moderate", "Speed-up, tight"], [row])]
     fig = figure(ws, rows, protocol)
     if fig:
         out += ["", f"Figure: `{fig.relative_to(ws.model_dir)}` (error in units of the moderate threshold against cost per beat)."]
@@ -126,7 +130,9 @@ def figure(ws: Workspace, rows: list[dict], protocol: str) -> Path | None:
 
     tol = BIOMARKER_SETS["moderate"]
     fig, ax = plt.subplots(figsize=(5, 4))
-    for scheme, marker in (("GRL", "o"), ("BIGRL", "s"), ("BIMGRL", "^"), ("BIMGRL-auto", "D"), ("RL", "v"), ("FE", "x")):
+    markers = {"FE": "x", "RL": "v", "GRL": "o", "BIRL": "P", "BIRL-M-auto": "d", "BIRL-M-unfrozen": "*", "BIRL-M": "h",
+               "BIGRL": "s", "BIMGRL": "^", "BIMGRL-auto": "D"}
+    for scheme, marker in markers.items():
         pts = []
         for r in rows:
             if r["scheme"] != scheme or r["protocol"] != protocol or r["status"] != "ok":
