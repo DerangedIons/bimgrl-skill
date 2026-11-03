@@ -210,7 +210,7 @@ def describe(row: dict) -> str:
     return s
 
 
-def sweep(ws: Workspace, labels=("GRL", "BIMGRL"), protocol_name: str = "B", beats: int = 10, dts=None, budget: float = 600.0,
+def sweep(ws: Workspace, labels=("RL", "BIRL-M"), protocol_name: str = "B", beats: int = 10, dts=None, budget: float = 600.0,
           blocks_file=None, suggested_file=None, stability: bool = False, save_traces: bool = False, force: bool = False) -> list[dict]:
     runner = Runner(ws, blocks_file, suggested_file, save_traces)
     protocol = protocols(ws.meta, beats)[protocol_name]

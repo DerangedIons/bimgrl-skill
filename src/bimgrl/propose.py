@@ -1,8 +1,24 @@
 """Propose the blocks from the structure, the invariants, the stiffness and the compartments,
-by the rules of the paper ("Choice of blocks"), each block with the finding that produced it;
-then compare with gotranx's own ``suggest-blocks`` and list the judgment calls
+each block with the finding that produced it; then compare with gotranx's own ``suggest-blocks``
+and list the judgment calls
 
-Rules:
+Two rule sets, one per base scheme of ``block_rush_larsen``.
+
+RL base (``--base rl``, the default; BIRL-M of the blocked-rush-larsen survey). The base
+updates only the Hodgkin-Huxley gates exponentially and every other state by forward Euler, so
+every non-gate state with a fast mode needs a block:
+1. Markov chains: as rule 1 of the GRL base.
+2. One calcium block: every Ca-carrying state (the confirmed Ca pools, the total-Ca networks
+   through them, their binding clusters) in one implicit block, merged with every implicit
+   block that shares a state with it (the RyR chain). Not filtered by stiffness: a Ca pool
+   outside a block is forward Euler and becomes the limit.
+3. V block: as rule 4 of the GRL base.
+4. No dyad block: it is a judgment call, ready to paste, to try in a tuning round.
+5. Nesting: as rule 6 of the GRL base.
+The file carries ``base_scheme = "rush_larsen"``, the gates as ``stiff_states`` and
+``freeze_boundary_fluxes = true``.
+
+GRL base (``--base grl``; BIMGRL, the paper's "Choice of blocks"):
 1. Every Markov chain of an ion channel or of the release channel (a closed or exactly
    conserving chain that feeds V, or that the compartments name as the release channel) is an
    implicit block. A chain that does not feed V (contraction) is listed, not blocked.
@@ -30,13 +46,16 @@ V_H_MIN = 0.001
 DYAD_H_MIN = 0.005
 DYAD_RTOL = 0.02
 OPEN_ATOL = 1e-3
+BASES = ("rl", "grl")
 
 
 def _toml_list(xs):
     return "[" + ", ".join(f'"{x}"' for x in xs) + "]"
 
 
-def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest_v_markov: bool = False) -> dict:
+def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest_v_markov: bool = False, base: str = "rl") -> dict:
+    if base not in BASES:
+        raise SystemExit(f"--base must be one of {', '.join(BASES)}, got {base!r}")
     meta = ws.meta
     comps = meta.compartments
     structure = ws.read_json("structure.json")
@@ -74,46 +93,49 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
             continue
         implicit.append(dict(states=members, why=f"Markov chain ({g['class']}); rule 1"))
 
-    # 2. binding clusters that own a stiff mode
-    clusters = [g for g in inv["invariants"] if g["level"] == "subgroup" and g["structure"] == "binding"]
-    cluster_of = {}
-    for g in clusters:
-        members = g["members"]
-        owners = [n for n in members if n in stiff_owners]
-        if g["class"] == "improper":
-            judgment.append(f"binding cluster {', '.join(members)} is flagged as not conserving; fix the model before blocking it")
-            continue
-        if owners:
-            lam = min(stiff_owners[n] for n in owners)
-            block = dict(states=list(members), why=f"pool with its buffers, stiff mode Re λ {lam:.4g} /ms owned by {', '.join(owners)}; rule 2")
-            implicit.append(block)
-            for n in members:
-                cluster_of[n] = block
-        else:
-            notes.append(f"binding cluster {', '.join(members)} owns no stiff mode (threshold {stiff_threshold:g} /ms): left explicit")
-    if stiff is None:
-        probe = "" if stiff_threshold <= stiffness.THRESHOLD else f" --threshold {stiff_threshold:g}"
-        judgment.append(f"no {stiff_file}: every binding cluster was treated as non-stiff; run `bimgrl stiffness{probe}` first")
-
-    # 3. SR + junction share a block
+    cluster_of: dict[str, dict] = {}
     sr, junc = comps.sr, comps.junction
-    if sr and junc:
-        b_sr, b_j = cluster_of.get(sr), cluster_of.get(junc)
-        if b_sr is not None and b_j is not None and b_sr is not b_j:
-            merged = dict(states=b_sr["states"] + b_j["states"], why=f"{b_sr['why']} + {b_j['why']}; joined so that the release conserves Ca (rule 3)")
-            implicit = [b for b in implicit if b is not b_sr and b is not b_j] + [merged]
-            for n in merged["states"]:
-                cluster_of[n] = merged
-        elif b_sr is not None and b_j is None:
-            b_sr["states"] = b_sr["states"] + [junc]
-            b_sr["why"] += f"; {junc} joined as a bare pool so that the release conserves Ca (rule 3)"
-            cluster_of[junc] = b_sr
-        elif b_j is not None and b_sr is None:
-            b_j["states"] = b_j["states"] + [sr]
-            b_j["why"] += f"; {sr} joined as a bare pool so that the release conserves Ca (rule 3)"
-            cluster_of[sr] = b_j
-    elif junc and not sr:
-        judgment.append("a junctional pool but no SR was named in meta.toml [compartments]: check")
+    if base == "rl":
+        implicit = _calcium_block(implicit, inv, comps, cluster_of, judgment)
+    else:
+        # 2. binding clusters that own a stiff mode
+        clusters = [g for g in inv["invariants"] if g["level"] == "subgroup" and g["structure"] == "binding"]
+        for g in clusters:
+            members = g["members"]
+            owners = [n for n in members if n in stiff_owners]
+            if g["class"] == "improper":
+                judgment.append(f"binding cluster {', '.join(members)} is flagged as not conserving; fix the model before blocking it")
+                continue
+            if owners:
+                lam = min(stiff_owners[n] for n in owners)
+                block = dict(states=list(members), why=f"pool with its buffers, stiff mode Re λ {lam:.4g} /ms owned by {', '.join(owners)}; rule 2")
+                implicit.append(block)
+                for n in members:
+                    cluster_of[n] = block
+            else:
+                notes.append(f"binding cluster {', '.join(members)} owns no stiff mode (threshold {stiff_threshold:g} /ms): left explicit")
+        if stiff is None:
+            probe = "" if stiff_threshold <= stiffness.THRESHOLD else f" --threshold {stiff_threshold:g}"
+            judgment.append(f"no {stiff_file}: every binding cluster was treated as non-stiff; run `bimgrl stiffness{probe}` first")
+
+        # 3. SR + junction share a block
+        if sr and junc:
+            b_sr, b_j = cluster_of.get(sr), cluster_of.get(junc)
+            if b_sr is not None and b_j is not None and b_sr is not b_j:
+                merged = dict(states=b_sr["states"] + b_j["states"], why=f"{b_sr['why']} + {b_j['why']}; joined so that the release conserves Ca (rule 3)")
+                implicit = [b for b in implicit if b is not b_sr and b is not b_j] + [merged]
+                for n in merged["states"]:
+                    cluster_of[n] = merged
+            elif b_sr is not None and b_j is None:
+                b_sr["states"] = b_sr["states"] + [junc]
+                b_sr["why"] += f"; {junc} joined as a bare pool so that the release conserves Ca (rule 3)"
+                cluster_of[junc] = b_sr
+            elif b_j is not None and b_sr is None:
+                b_j["states"] = b_j["states"] + [sr]
+                b_j["why"] += f"; {sr} joined as a bare pool so that the release conserves Ca (rule 3)"
+                cluster_of[sr] = b_j
+        elif junc and not sr:
+            judgment.append("a junctional pool but no SR was named in meta.toml [compartments]: check")
 
     substep: list[dict] = []
     # 4. V block
@@ -142,8 +164,17 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
         triggers = [dict(state=junc, rtol=DYAD_RTOL)] + [dict(state=o, atol=OPEN_ATOL) for o in comps.release_open if o in dyad]
         if not comps.release_open:
             judgment.append("no open states of the release channel named: the dyad block triggers only on the junctional Ca")
-        substep.append(dict(states=dyad, h_min=DYAD_H_MIN, mode="binary", rate_triggers=triggers,
-                            why="junctional Ca with its buffers, the release channel and the SR, refined while release is active (rule 5)"))
+        dyad_block = dict(states=dyad, h_min=DYAD_H_MIN, mode="binary", rate_triggers=triggers,
+                          why="junctional Ca with its buffers, the release channel and the SR, refined while release is active (rule 5)")
+        if base == "grl":
+            substep.append(dyad_block)
+        else:
+            dyad_block["why"] = "the dyad: the whole calcium block and the release channel, refined while release is active"
+            judgment.append(
+                "no dyad sub-step block under the RL base: try without it first. In the survey it made T-World 5x slower "
+                "than the suggested blocks and costs at every step in tissue, but it won by far in ten Tusscher 2004/2006, "
+                "Grandi 2010 and ToR-ORd. To try it in a tuning round, add:\n\n```toml\n"
+                + "\n".join(_substep_toml(dyad_block)) + "\n```")
     else:
         notes.append("no junctional/dyadic pool: no dyad block (as for models whose Ca enters the cytosol directly)")
 
@@ -171,7 +202,8 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
     try:
         from gotranx.block_detection import DetectionSettings, blocks_to_toml, detect_blocks
 
-        det = detect_blocks(ws.model.ode, DetectionSettings(dt=dt, membrane_potential=v))
+        base_kw = dict(base_scheme="rush_larsen", freeze_boundary_fluxes=True) if base == "rl" else {}
+        det = detect_blocks(ws.model.ode, DetectionSettings(dt=dt, membrane_potential=v, **base_kw))
         suggested = det
         (ws.out / f"blocks_suggested_dt{dt:g}.toml").write_text(blocks_to_toml(det))
     except Exception as e:  # noqa: BLE001
@@ -202,10 +234,17 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
             differ.append(f"the V block differs ({only})")
         judgment += [f"gotranx suggest-blocks disagrees: {d}" for d in differ]
         if differ:
-            judgment.append(f"to settle the gotranx disagreements on numbers, `bimgrl sweep <model_dir> --scheme BIMGRL,BIMGRL-auto "
+            labels = "BIRL-M,BIRL-M-auto" if base == "rl" else "BIMGRL,BIMGRL-auto"
+            judgment.append(f"to settle the gotranx disagreements on numbers, `bimgrl sweep <model_dir> --scheme {labels} "
                             f"--suggested <model_dir>/bimgrl/blocks_suggested_dt{dt:g}.toml` measures both block sets")
 
-    toml = render_toml(implicit, substep, meta.id, round_=1)
+    stiff_states = None
+    if base == "rl":
+        from .stepper import ws_gates
+
+        in_implicit = set().union(*(set(b["states"]) for b in implicit))
+        stiff_states = [g for g in (meta.rl_gates or ws_gates(ws.model)) if g not in in_implicit]
+    toml = render_toml(implicit, substep, meta.id, round_=1, base=base, stiff_states=stiff_states)
     # validate
     try:
         from gotranx.blocks import parse_blocks, validate_blocks
@@ -217,7 +256,7 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
         valid = f"INVALID: {e}"
         judgment.append(valid)
 
-    result = dict(implicit=implicit, substep=substep, notes=notes, judgment=judgment, valid=valid, toml=toml, dt=dt,
+    result = dict(base=base, stiff_states=stiff_states, implicit=implicit, substep=substep, notes=notes, judgment=judgment, valid=valid, toml=toml, dt=dt,
                   suggested=_describe_detection(suggested) if suggested else None, suggest_msg=suggest_msg)
     return result
 
@@ -231,23 +270,83 @@ def _describe_detection(det) -> dict:
     )
 
 
-def render_toml(implicit, substep, model_id: str, round_: int) -> str:
-    lines = [f"# Blocks for {model_id} (round {round_}; see NOTES.md), proposed by bimgrl propose from the", "# paper's rules; every block carries the finding that produced it.", ""]
+def _substep_toml(s: dict) -> list[str]:
+    trig = ", ".join("{ " + ", ".join(f"{k} = {v!r}" if k != "state" else f'state = "{v}"' for k, v in t.items()) + " }" for t in s["rate_triggers"])
+    return [f"# {s['why']}", "[[substep_blocks]]", f"states = {_toml_list(s['states'])}", f"h_min = {s['h_min']}", f'mode = "{s["mode"]}"',
+            f"rate_triggers = [{trig}]"]
+
+
+def render_toml(implicit, substep, model_id: str, round_: int, base: str = "grl", stiff_states=None) -> str:
+    rules = "the RL-base rules (BIRL-M)" if base == "rl" else "the paper's GRL-base rules (BIMGRL)"
+    lines = [f"# Blocks for {model_id} (round {round_}; see NOTES.md), proposed by bimgrl propose from", f"# {rules}; every block carries the finding that produced it.", ""]
+    if base == "rl":
+        lines += ["# The RL base: the Hodgkin-Huxley gates are updated exponentially, every other state by forward",
+                  "# Euler unless it is in an implicit block", 'base_scheme = "rush_larsen"', f"stiff_states = {_toml_list(stiff_states or [])}",
+                  "# Each implicit block takes the fluxes across its boundary explicitly", "freeze_boundary_fluxes = true", ""]
     for b in implicit:
         lines += [f"# {b['why']}", "[[implicit_blocks]]", f"states = {_toml_list(b['states'])}", ""]
     for s in substep:
-        lines += [f"# {s['why']}", "[[substep_blocks]]", f"states = {_toml_list(s['states'])}", f"h_min = {s['h_min']}", f'mode = "{s["mode"]}"']
-        trig = ", ".join("{ " + ", ".join(f"{k} = {v!r}" if k != "state" else f'state = "{v}"' for k, v in t.items()) + " }" for t in s["rate_triggers"])
-        lines += [f"rate_triggers = [{trig}]", ""]
+        lines += _substep_toml(s) + [""]
     return "\n".join(lines)
 
 
+def _calcium_block(implicit: list[dict], inv: dict, comps, cluster_of: dict, judgment: list[str]) -> list[dict]:
+    """The RL-base calcium block: the Ca pools, the total-Ca networks and binding clusters through
+    them, and every implicit block that shares a state with it, as one implicit block"""
+    pools = [p for p in (comps.cytosol, comps.junction, comps.subsarcolemma, comps.sr) if p]
+    if not pools:
+        judgment.append("no Ca pool is named in meta.toml [compartments]: no calcium block, so under the RL base every Ca state runs on forward Euler")
+        return implicit
+    states, sources = list(pools), []
+
+    def add(members):
+        states.extend(m for m in members if m not in states)
+
+    for g in inv["invariants"]:
+        if not set(g["members"]) & set(pools):
+            continue
+        if g["level"] == "network":
+            if g["class"] == "open":
+                judgment.append(f"the network {g['name']} through the Ca pools does not conserve (class open, see invariants.md): its states were not added to the calcium block")
+                continue
+            add(g["members"])
+            sources.append(f"{g['name']} ({g['class']})")
+        elif g["level"] == "subgroup" and g["structure"] == "binding":
+            if g["class"] == "improper":
+                judgment.append(f"binding cluster {', '.join(g['members'])} is flagged as not conserving; fix the model before blocking it")
+                continue
+            add(g["members"])
+            sources.append(f"binding cluster {', '.join(g['members'])}")
+    merged = []
+    while True:
+        more = [b for b in implicit if b not in merged and set(b["states"]) & set(states)]
+        if not more:
+            break
+        for b in more:
+            add(b["states"])
+        merged += more
+    why = f"one calcium block: the Ca pools {', '.join(pools)}"
+    if sources:
+        why += f", with {'; '.join(sources)}"
+    if merged:
+        why += f"; absorbed {'; '.join(b['why'] for b in merged)}"
+    why += " (RL base: a Ca state outside an implicit block runs on forward Euler and limits the step)"
+    block = dict(states=states, why=why)
+    for n in states:
+        cluster_of[n] = block
+    return [b for b in implicit if b not in merged] + [block]
+
+
 def to_markdown(r: dict) -> str:
-    out = ["# Proposed blocks", "", f"Validation: {r['valid']}", ""]
+    base = r.get("base", "grl")
+    out = ["# Proposed blocks", "", f"Base: {'Rush-Larsen (BIRL-M), frozen boundary fluxes' if base == 'rl' else 'generalized Rush-Larsen (BIMGRL)'}", "",
+           f"Validation: {r['valid']}", ""]
+    if base == "rl":
+        out += [f"Stiff states (exponential under the base): {', '.join(r['stiff_states']) or 'none'}", ""]
     out += ["## Implicit blocks", ""] + ([f"- {', '.join(b['states'])}: {b['why']}" for b in r["implicit"]] or ["- none"])
     out += ["", "## Sub-step blocks", ""] + ([f"- {', '.join(s['states'])} ({s['mode']}, h_min {s['h_min']}, triggers {s['rate_triggers']}): {s['why']}" for s in r["substep"]] or ["- none"])
     out += ["", "## Left explicit (by rule)", ""] + ([f"- {n}" for n in r["notes"]] or ["- nothing"])
-    out += ["", "## Judgment calls for the user", ""] + ([f"- {j}" for j in r["judgment"]] or ["- none"])
+    out += ["", "## Judgment calls for the user", ""] + ([f"- {j}".replace("\n", "\n  ") for j in r["judgment"]] or ["- none"])
     out += ["", f"## gotranx suggest-blocks at dt {r['dt']:g}, for comparison", ""]
     if r["suggested"]:
         s = r["suggested"]
@@ -264,8 +363,8 @@ def to_markdown(r: dict) -> str:
     return "\n".join(out)
 
 
-def run(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest_v_markov: bool = False, write: bool = True) -> dict:
-    r = propose(ws, dt, stiff_threshold, nest_v_markov)
+def run(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest_v_markov: bool = False, write: bool = True, base: str = "rl") -> dict:
+    r = propose(ws, dt, stiff_threshold, nest_v_markov, base)
     ws.write_json("propose.json", {k: v for k, v in r.items() if k != "toml"})
     ws.write_md("propose.md", to_markdown(r))
     target = ws.model_dir / "blocks.toml"

@@ -16,15 +16,25 @@ from pathlib import Path
 
 import numpy as np
 
-SCHEMES = ("FE", "RL", "GRL", "BIGRL", "BIMGRL", "BIMGRL-auto")
+# The RL-base configurations are those of the blocked-rush-larsen survey (BIRL-M is the default
+# scheme, RL its baseline); the GRL-base ones are the paper's (BIMGRL, against GRL)
+SCHEMES = ("FE", "RL", "GRL", "BIRL", "BIRL-M-auto", "BIRL-M-unfrozen", "BIRL-M", "BIGRL", "BIMGRL", "BIMGRL-auto")
 GOTRANX_SCHEME = {
     "FE": "explicit_euler",
     "RL": "hybrid_rush_larsen",
     "GRL": "generalized_rush_larsen",
+    "BIRL": "block_rush_larsen",
+    "BIRL-M-auto": "block_rush_larsen",
+    "BIRL-M-unfrozen": "block_rush_larsen",
+    "BIRL-M": "block_rush_larsen",
     "BIGRL": "block_rush_larsen",
     "BIMGRL": "block_rush_larsen",
     "BIMGRL-auto": "block_rush_larsen",
 }
+#: the block configurations with the RL base, and those with the curated implicit blocks only
+RL_BASE = ("BIRL", "BIRL-M-auto", "BIRL-M-unfrozen", "BIRL-M")
+IMPLICIT_ONLY = ("BIRL", "BIGRL")
+AUTO = ("BIRL-M-auto", "BIMGRL-auto")
 
 DRIVER = r"""
 #include <stdlib.h>
@@ -120,7 +130,13 @@ class SchemeConfig:
 
 
 def scheme_config(label: str, model, blocks_file: Path | None = None, suggested_file: Path | None = None) -> SchemeConfig | None:
-    """The configuration `label`; None if it does not apply (BIGRL without implicit blocks)"""
+    """The configuration `label`; None if it does not apply (BIRL or BIGRL without implicit blocks)
+
+    Each label sets its own base: the RL-base labels the Rush-Larsen base with the HH gates as
+    stiff states (those of the blocks file, else ``meta.rl_gates``, else the detected gates) and
+    frozen boundary fluxes (except ``-unfrozen``; the ``-auto`` labels keep the suggested file's
+    own); the GRL-base labels the generalized base, whatever the blocks file says.
+    """
     from gotranx.blocks import load_blocks
 
     scheme = GOTRANX_SCHEME[label]
@@ -129,17 +145,28 @@ def scheme_config(label: str, model, blocks_file: Path | None = None, suggested_
     if label == "RL":
         gates = model.meta.rl_gates or ws_gates(model)
         return SchemeConfig(label, scheme, {"stiff_states": list(gates)}, repr(list(gates)))
-    path = suggested_file if label == "BIMGRL-auto" else blocks_file
+    path = suggested_file if label in AUTO else blocks_file
     if path is None or not Path(path).exists():
         raise SystemExit(f"{label} needs a blocks file ({path})")
     blocks = load_blocks(path)
-    if label == "BIGRL":
+    if label in IMPLICIT_ONLY:
         if not blocks.implicit:
             return None
         kwargs = dict(implicit_blocks=blocks.implicit, substep_blocks=())
     else:
         kwargs = dict(implicit_blocks=blocks.implicit, substep_blocks=blocks.substep)
     identity = repr((tuple(kwargs["implicit_blocks"]), tuple(kwargs["substep_blocks"])))
+    if label in RL_BASE:
+        gates = list(blocks.stiff_states or model.meta.rl_gates or ws_gates(model))
+        if label == "BIRL-M-auto":
+            freeze = bool(blocks.freeze_boundary_fluxes)
+        else:
+            freeze = label != "BIRL-M-unfrozen"
+        kwargs.update(base_scheme="rush_larsen", stiff_states=gates, freeze_boundary_fluxes=freeze)
+        identity += repr(("rush_larsen", tuple(gates), freeze))
+    else:
+        # the identity of the GRL-base configurations is unchanged, so earlier runs keep their keys
+        kwargs.update(base_scheme="generalized_rush_larsen", stiff_states=None, freeze_boundary_fluxes=False)
     return SchemeConfig(label, scheme, kwargs, identity, str(path))
 
 

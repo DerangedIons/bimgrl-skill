@@ -2,9 +2,15 @@
   "skill": "bimgrl",
   "evals": [
     {
-      "id": "tt06-from-ode",
-      "prompt": "Here is the ten Tusscher-Panfilov 2006 epicardial model as a gotranx .ode file at evals/fixtures/tt06/model.ode. Find what limits its time step under generalized Rush-Larsen, propose BIMGRL blocks, and tell me the speed-up at the moderate biomarker thresholds.",
+      "id": "tt06-from-ode-grl",
+      "prompt": "Here is the ten Tusscher-Panfilov 2006 epicardial model as a gotranx .ode file at evals/fixtures/tt06/model.ode. Find what limits its time step under generalized Rush-Larsen, propose BIMGRL blocks (the paper's GRL-base scheme), and tell me the speed-up at the moderate biomarker thresholds.",
       "expected_output": "Runs intake (confirms V, Ca_i, Ca_SR, Ca_ss, R_prime, gates m/h/j), structure, invariants (total Ca with weights V_c/V_sr and V_ss/V_sr, all currents accounted), reference, stiffness (m gate near -990 /ms, forward-Euler limit 2 us, no implicit-step-limited mode), proposes two sub-step blocks and no implicit block, sweeps GRL and BIMGRL, reports GRL passing moderate at 0.025 ms and BIMGRL at 0.25 ms, speed-up about 6x; mentions fCass and the SR in the dyad as judgment calls.",
+      "files": ["evals/fixtures/tt06/model.ode"]
+    },
+    {
+      "id": "tt06-from-ode-birlm",
+      "prompt": "Here is the ten Tusscher-Panfilov 2006 epicardial model as a gotranx .ode file at evals/fixtures/tt06/model.ode. Speed it up with block Rush-Larsen and tell me the speed-up over Rush-Larsen at the moderate biomarker thresholds.",
+      "expected_output": "Uses the default BIRL-M path: intake, structure, invariants, reference, stiffness (names the Ca pools as forward-Euler-stepped owners under RL+FE), RL baseline sweep with --stability, propose with the RL base (base_scheme rush_larsen, the HH gates as stiff_states, freeze_boundary_fluxes true, one implicit calcium block over Ca_i, Ca_SR and Ca_ss, the V block with m, h, j, and the dyad block offered as a judgment call rather than proposed), sweeps RL, BIRL and BIRL-M, reports the speed-up from the cheapest passing run of each (not the largest step), and quotes every number from the scripts.",
       "files": ["evals/fixtures/tt06/model.ode"]
     },
     {

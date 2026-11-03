@@ -1,5 +1,5 @@
-"""Generate the scheme code with gotranx for the user's target (C, Python/numpy, Julia,
-CytoZoo), with the blocks of blocks.toml"""
+"""Generate the scheme code with gotranx for the user's target (C, C++, CUDA, Python/numpy, Julia,
+CytoZoo), with the blocks of blocks.toml (which carries the base scheme of BIRL-M)"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 from .stepper import GOTRANX_SCHEME
 from .workspace import Workspace
 
-BACKENDS = {"c": "ode2c", "python": "ode2py", "julia": "ode2julia", "cytozoo": "ode2cytozoo"}
+BACKENDS = {"c": "ode2c", "cpp": "ode2cpp", "cuda": "ode2cuda", "python": "ode2py", "julia": "ode2julia", "cytozoo": "ode2cytozoo"}
 
 
 def run(ws: Workspace, backend: str, label: str, out: Path | None, blocks: Path | None = None, extra: list[str] = ()) -> Path:

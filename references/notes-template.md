@@ -35,7 +35,7 @@ Every model directory keeps a `NOTES.md` in the survey's section convention. `bi
 
 ## Promising dt
 
-- (GRL: ...; BIMGRL: ...)
+- (RL: ...; BIRL-M: ...)
 ```
 
 ## Tuning-log entries

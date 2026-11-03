@@ -1,5 +1,7 @@
 # Proposed blocks
 
+Base: generalized Rush-Larsen (BIMGRL)
+
 Validation: valid (gotranx validate_blocks)
 
 ## Implicit blocks
