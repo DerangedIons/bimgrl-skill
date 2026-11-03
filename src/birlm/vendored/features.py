@@ -1,4 +1,4 @@
-# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/features.py), adapted for bimgrl:
+# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/features.py), adapted for birlm:
 # imports made package-relative; no other changes unless noted below.
 """Biomarkers of an action potential, the same for the reference and the schemes
 

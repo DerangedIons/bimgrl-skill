@@ -1,4 +1,4 @@
-# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (block_rush_larsen/features.py), adapted for bimgrl:
+# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (block_rush_larsen/features.py), adapted for birlm:
 # imports made package-relative; no other changes unless noted below.
 """Action potential and calcium transient features of one beat
 

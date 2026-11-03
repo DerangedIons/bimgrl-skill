@@ -1,6 +1,6 @@
 # NOTES.md and the tuning log
 
-Every model directory keeps a `NOTES.md` in the survey's section convention. `bimgrl log` creates it from the skeleton below if it is missing, appends tuning rounds, and adds lines to sections; nothing in it is overwritten.
+Every model directory keeps a `NOTES.md` in the survey's section convention. `birlm log` creates it from the skeleton below if it is missing, appends tuning rounds, and adds lines to sections; nothing in it is overwritten.
 
 ## Skeleton
 
@@ -21,15 +21,15 @@ Every model directory keeps a `NOTES.md` in the survey's section convention. `bi
 
 ## Structure and invariants
 
-- (see bimgrl/structure.md and bimgrl/invariants.md: chains, binding clusters, flags)
+- (see birlm/structure.md and birlm/invariants.md: chains, binding clusters, flags)
 
 ## Stiffness
 
-- (see bimgrl/stiffness.md: the stiff modes, their owners, the predicted and measured limits)
+- (see birlm/stiffness.md: the stiff modes, their owners, the predicted and measured limits)
 
 ## Blocks
 
-- (the blocks and the rule or finding behind each; see bimgrl/propose.md)
+- (the blocks and the rule or finding behind each; see birlm/propose.md)
 
 ## Tuning log
 
@@ -41,7 +41,7 @@ Every model directory keeps a `NOTES.md` in the survey's section convention. `bi
 ## Tuning-log entries
 
 ```
-bimgrl log <model_dir> --round N --change "<what changed>" --result "<the numbers>" --decision "<adopted or rejected, and why>" [--freeze]
+birlm log <model_dir> --round N --change "<what changed>" --result "<the numbers>" --decision "<adopted or rejected, and why>" [--freeze]
 ```
 
 writes one bullet under `## Tuning log`:
@@ -67,4 +67,4 @@ The first line of `blocks.toml` names the round it belongs to, so that a file an
 # Blocks for tworld (round 2; see NOTES.md)
 ```
 
-`bimgrl log --freeze` stamps the current round into that header; `bimgrl propose` writes round 1. Old rows in `runs.csv` keep the configuration key of the blocks they were run with, so a re-run after a change never mixes rounds.
+`birlm log --freeze` stamps the current round into that header; `birlm propose` writes round 1. Old rows in `runs.csv` keep the configuration key of the blocks they were run with, so a re-run after a change never mixes rounds.

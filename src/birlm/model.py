@@ -26,7 +26,7 @@ def require_gotranx():
         import gotranx  # noqa: F401
     except ImportError as e:
         raise SystemExit(
-            "gotranx is not installed in the skill environment; run `bimgrl setup` "
+            "gotranx is not installed in the skill environment; run `birlm setup` "
             "(see config.toml for the source it installs from)"
         ) from e
 
@@ -114,7 +114,7 @@ class Model:
             if protocol.stim is not None:
                 raise ValueError(
                     f"{self.meta.id} has no stim_* parameters; the stimulus must be rewritten "
-                    "to the half-open form first (bimgrl convert / references/contracts.md)"
+                    "to the half-open form first (birlm convert / references/contracts.md)"
                 )
             return p
         index = self.ns["parameter_index"]

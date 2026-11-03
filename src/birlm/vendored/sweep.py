@@ -1,5 +1,5 @@
 # Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/sweep.py):
-# only bisect_k; the rest of the sweep is rewritten in bimgrl/sweep.py.
+# only bisect_k; the rest of the sweep is rewritten in birlm/sweep.py.
 from __future__ import annotations
 
 from collections.abc import Callable

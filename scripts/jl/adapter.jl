@@ -1,4 +1,4 @@
-# JSON-lines RHS adapter for a Julia model, serving `bimgrl`'s native path.
+# JSON-lines RHS adapter for a Julia model, serving `birlm`'s native path.
 #
 #   julia --startup-file=no --project=<skill-dir>/scripts/jl adapter.jl <model.jl> [--params params.json]
 #

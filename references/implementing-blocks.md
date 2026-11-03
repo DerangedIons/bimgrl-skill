@@ -47,5 +47,5 @@ Neither would have been noticed by "does it run and look like an AP". Both were 
 
 1. **Bit-for-bit no-op.** With every block switched off, the new integrator must reproduce the old one exactly at the old step. With the blocks on at a step small enough that no sub-step is ever taken, the implicit blocks alone must change the result only at round-off level of what the old step already resolved.
 2. **At the old step.** Run the blocks at the old dt and compare SR load, CaT amplitude and diastolic Ca with the adaptive reference (Rodas5P or LSODA, rtol ≤ 1e-8); differences here are implementation errors, not step-size errors.
-3. **At the new step.** Sweep dt upward and apply the moderate and tight thresholds of `thresholds.md` on beat 10; run 100 to 600 beats and watch every invariant (chain sums, total Ca, Na⁺ and K⁺ drift) with `bimgrl validate` on your trace.
+3. **At the new step.** Sweep dt upward and apply the moderate and tight thresholds of `thresholds.md` on beat 10; run 100 to 600 beats and watch every invariant (chain sums, total Ca, Na⁺ and K⁺ drift) with `birlm validate` on your trace.
 4. **Threshold phenomena.** Restitution, alternans onset, EAD threshold and the beat of the first EAD, DAD threshold. These test the dynamics, not the end state, and are where a scheme that is "almost right" shows.

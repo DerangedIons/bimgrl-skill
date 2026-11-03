@@ -4,7 +4,7 @@
 
 gotranx's ODE format, with three conventions the pipeline relies on.
 
-**Units.** Time in ms, membrane potential in mV, concentrations in mM (any unit containing `M` or `mol` is a concentration for the physical-range check; `1` or an empty unit is a gate). `bimgrl convert` converts CellML time and voltage with myokit; a hand translation must do the same.
+**Units.** Time in ms, membrane potential in mV, concentrations in mM (any unit containing `M` or `mol` is a concentration for the physical-range check; `1` or an empty unit is a gate). `birlm convert` converts CellML time and voltage with myokit; a hand translation must do the same.
 
 **The stimulus.** Every paced model carries its stimulus as five parameters and a half-open interval, so that a step is stimulated if and only if it starts inside the interval and exactly `duration / dt` steps are stimulated per period:
 
@@ -28,7 +28,7 @@ A closed interval with an accumulated time stimulates one step too many in some 
 
 ## `meta.toml`
 
-Written as a draft by `bimgrl intake`, confirmed by the user. Keys (from `src/bimgrl/meta.py`):
+Written as a draft by `birlm intake`, confirmed by the user. Keys (from `src/birlm/meta.py`):
 
 | key | meaning |
 |---|---|
@@ -111,11 +111,11 @@ A MATLAB or C adapter has the same shape: a loop reading a line (`fgetl(stdin)` 
 
 ## The trace contract
 
-What every scheme in every language writes for validation, and what `bimgrl reference` writes for the reference.
+What every scheme in every language writes for validation, and what `birlm reference` writes for the reference.
 
 **`<name>.csv`**: header `t,<state names in model order>`, one row per sample, full precision (`%.17g`). Optional extra columns `aux_<intermediate>` for currents or fluxes.
 
-**`<name>.json`** (the run meta; fields of `RunMeta` in `src/bimgrl/trace.py`):
+**`<name>.json`** (the run meta; fields of `RunMeta` in `src/birlm/trace.py`):
 
 ```json
 {
@@ -130,8 +130,8 @@ What every scheme in every language writes for validation, and what `bimgrl refe
 }
 ```
 
-A reference trace has `"reference": true` and `"solver": {"name": "LSODA", "rtol": 1e-10, "atol": 1e-12}`; `bimgrl validate` refuses a reference whose `rtol` is above 1e-8. `status` is one of `ok`, `nan`, `unphysical`, `timeout`, `error`.
+A reference trace has `"reference": true` and `"solver": {"name": "LSODA", "rtol": 1e-10, "atol": 1e-12}`; `birlm validate` refuses a reference whose `rtol` is above 1e-8. `status` is one of `ok`, `nan`, `unphysical`, `timeout`, `error`.
 
 **`<name>_beats.csv`** (optional, protocol B): header `t,<states>`, the state at the start of every beat, for the drift of the slow states and of the invariants.
 
-**`bimgrl validate <model_dir> --test trace.csv [--reference ref.csv] [--level moderate|tight] [--name NAME]`** reads both, takes the overlap of the two time ranges, interpolates the reference at the test's times, classifies the test's physical range against the reference's own range, computes the biomarkers of `thresholds.md`, the pass/fail per set, the Na⁺ and K⁺ drift and every invariant's drift from the `_beats.csv` files, and writes `bimgrl/validation_<name>.md` and `.json`. Protocol B traces should carry the last beat on a 0.1 ms grid (or the scheme's own step if coarser), as `bimgrl reference` does; a trace written with `%.6g` cannot pass the invariant floors, so write full precision.
+**`birlm validate <model_dir> --test trace.csv [--reference ref.csv] [--level moderate|tight] [--name NAME]`** reads both, takes the overlap of the two time ranges, interpolates the reference at the test's times, classifies the test's physical range against the reference's own range, computes the biomarkers of `thresholds.md`, the pass/fail per set, the Na⁺ and K⁺ drift and every invariant's drift from the `_beats.csv` files, and writes `birlm/validation_<name>.md` and `.json`. Protocol B traces should carry the last beat on a 0.1 ms grid (or the scheme's own step if coarser), as `birlm reference` does; a trace written with `%.6g` cannot pass the invariant floors, so write full precision.

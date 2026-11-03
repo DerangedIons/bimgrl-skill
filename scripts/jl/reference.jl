@@ -1,4 +1,4 @@
-# Rodas5P reference trace of a Julia model in the bimgrl trace contract.
+# Rodas5P reference trace of a Julia model in the birlm trace contract.
 #
 #   julia --startup-file=no --project=<skill-dir>/scripts/jl reference.jl <model.jl> <out_stem> --t1 1000 [--bcl 1000 --beats 10]
 #       [--stim-start 0 --stim-duration 1] [--reltol 1e-8 --abstol 1e-10] [--grid 0.1]

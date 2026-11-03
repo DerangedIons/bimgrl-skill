@@ -1,6 +1,6 @@
 # Invariants and conservation checks
 
-`bimgrl invariants` answers two questions a Jacobian cannot: what the model conserves by construction, and whether what should be conserved actually is. Both come from the stoichiometry of the equations rather than from their linearisation.
+`birlm invariants` answers two questions a Jacobian cannot: what the model conserves by construction, and whether what should be conserved actually is. Both come from the stoichiometry of the equations rather than from their linearisation.
 
 ## Why not the Jacobian's null space
 

@@ -1,4 +1,4 @@
-# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/reference.py), adapted for bimgrl:
+# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/reference.py), adapted for birlm:
 # imports made package-relative; no other changes unless noted below.
 """The "true" solution: scipy LSODA at tight tolerances, segment by segment
 

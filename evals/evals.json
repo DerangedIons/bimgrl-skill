@@ -1,5 +1,5 @@
 {
-  "skill": "bimgrl",
+  "skill": "birlm",
   "evals": [
     {
       "id": "tt06-from-ode-grl",
@@ -16,13 +16,13 @@
     {
       "id": "conservation-flag",
       "prompt": "I think one of the Markov chains in my model (evals/fixtures/tt06/model.ode is a stand-in; the real one is T-World) is written wrong. Can your conservation check tell me which rate is inconsistent before we add implicit blocks?",
-      "expected_output": "Explains the stoichiometric check (column sums of the chain's atoms under unit weights), runs bimgrl invariants, and when a chain is flagged improper reports the atom and the column coefficients that break the sum, refuses to block an improper chain, and asks whether to fix the model.",
+      "expected_output": "Explains the stoichiometric check (column sums of the chain's atoms under unit weights), runs birlm invariants, and when a chain is flagged improper reports the atom and the column coefficients that break the sum, refuses to block an improper chain, and asks whether to fix the model.",
       "files": ["evals/fixtures/tt06/model.ode"]
     },
     {
       "id": "native-julia",
       "prompt": "My model is a hand-optimised Julia f(du,u,p,t) that I cannot translate. What can you still do to find its stiff modes and whether GRL would conserve its chains, and how would I validate a hand-written block scheme?",
-      "expected_output": "Describes the native path: the JSON-lines adapter served by scripts/jl/adapter.jl with ForwardDiff, a trace from the user's code for checkpoints, bimgrl stiffness --adapter and invariants --adapter, implementing blocks per references/implementing-blocks.md, and validation through the trace contract with bimgrl validate against a Rodas5P reference from scripts/jl/reference.jl.",
+      "expected_output": "Describes the native path: the JSON-lines adapter served by scripts/jl/adapter.jl with ForwardDiff, a trace from the user's code for checkpoints, birlm stiffness --adapter and invariants --adapter, implementing blocks per references/implementing-blocks.md, and validation through the trace contract with birlm validate against a Rodas5P reference from scripts/jl/reference.jl.",
       "files": []
     }
   ]

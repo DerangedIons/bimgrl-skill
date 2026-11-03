@@ -1,12 +1,12 @@
 {
-  "name": "bimgrl",
+  "name": "birlm",
   "description": "Apply block Rush-Larsen (BIRL-M by default, or the paper's BIMGRL) to a cardiac cell model: stiffness and conservation analysis, block proposal, gotranx code generation and dt sweeps against an LSODA reference.",
   "author": {
     "name": "Kyle Beggs",
     "email": "kyle@rallypoint1.com"
   },
-  "homepage": "https://github.com/DerangedIons/bimgrl-skill",
-  "repository": "https://github.com/DerangedIons/bimgrl-skill",
+  "homepage": "https://github.com/DerangedIons/birlm-skill",
+  "repository": "https://github.com/DerangedIons/birlm-skill",
   "license": "MIT",
   "keywords": [
     "cardiac",

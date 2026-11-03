@@ -3,10 +3,10 @@
 Everything here is driven from one command, run from the skill directory against a model directory that holds `model.ode` and `meta.toml`:
 
 ```
-uv run --directory <skill-dir> bimgrl <command> <model_dir> [flags]
+uv run --directory <skill-dir> birlm <command> <model_dir> [flags]
 ```
 
-Every phase writes a JSON (for the next script) and a Markdown report (for the agent and the user) under `<model_dir>/bimgrl/`. Scripts never raise on a model failure: a run that diverges, goes unphysical or exceeds its budget is a row with a status, so the agent can reason about it. The agent's job is the judgment at the gates below, never the arithmetic.
+Every phase writes a JSON (for the next script) and a Markdown report (for the agent and the user) under `<model_dir>/birlm/`. Scripts never raise on a model failure: a run that diverges, goes unphysical or exceeds its budget is a row with a status, so the agent can reason about it. The agent's job is the judgment at the gates below, never the arithmetic.
 
 ## The mental model (from the T-World implicit tutorial)
 
@@ -21,14 +21,14 @@ The pipeline below is this list made deterministic, with the invariant check pro
 
 ## Two paths
 
-**Canonical path.** The model is a gotranx `.ode` file (converted from CellML by `bimgrl convert`, or translated by the agent and proven by `bimgrl fidelity`, see `translation.md`). Every phase runs, gotranx generates the schemes, and the sweep measures cost in compiled C.
+**Canonical path.** The model is a gotranx `.ode` file (converted from CellML by `birlm convert`, or translated by the agent and proven by `birlm fidelity`, see `translation.md`). Every phase runs, gotranx generates the schemes, and the sweep measures cost in compiled C.
 
-**Native path.** The model must stay in its own code (a hand-optimised Julia integrator, a legacy C model). The analysis phases run through an RHS adapter (`contracts.md`), the agent implements the blocks in the user's integrator by the recipe in `implementing-blocks.md`, and validation goes through the trace contract with `bimgrl validate`. There is no `propose`, `codegen` or `sweep` on this path; the block rules in `block-rules.md` are applied by hand.
+**Native path.** The model must stay in its own code (a hand-optimised Julia integrator, a legacy C model). The analysis phases run through an RHS adapter (`contracts.md`), the agent implements the blocks in the user's integrator by the recipe in `implementing-blocks.md`, and validation goes through the trace contract with `birlm validate`. There is no `propose`, `codegen` or `sweep` on this path; the block rules in `block-rules.md` are applied by hand.
 
 ## Phase 0: setup
 
 ```
-uv run --directory <skill-dir> bimgrl setup [--skill-dir DIR]
+uv run --directory <skill-dir> birlm setup [--skill-dir DIR]
 ```
 
 Installs gotranx from the spec in `config.toml` (or `GOTRANX_SRC=/path/to/clone`) into the skill's environment. The `block_rush_larsen` scheme, `suggest-blocks` and the symbolic Jacobian live in the DerangedIons fork until they are upstreamed, so this needs access to that repository or a local clone at the pinned commit. Nothing else in the skill works without it on the canonical path; the native path needs only numpy and scipy.
@@ -36,17 +36,17 @@ Installs gotranx from the spec in `config.toml` (or `GOTRANX_SRC=/path/to/clone`
 ## Phase 1: intake
 
 ```
-bimgrl intake <model_dir> [--voltage NAME] [--force]
+birlm intake <model_dir> [--voltage NAME] [--force]
 ```
 
-Reads `model.ode`, writes a draft `meta.toml` and `bimgrl/intake.md`. The draft names the membrane potential (the only mV state, else the state most derivatives depend on), the cytosolic Ca, Na and K (by normalised name), the stimulus (the half-open `stim_*` parameters if present, else a warning that the stimulus must be rewritten), and the `[compartments]` table: the SR (the free Ca pool with the largest initial value), the junction (the pool exchanging directly with the SR), the sub-sarcolemmal pool, the release channel (dimensionless states coupled both ways to the junction and depending on the SR), its open states, and the INa gates (HH gates named m*, h*, j* or containing "na").
+Reads `model.ode`, writes a draft `meta.toml` and `birlm/intake.md`. The draft names the membrane potential (the only mV state, else the state most derivatives depend on), the cytosolic Ca, Na and K (by normalised name), the stimulus (the half-open `stim_*` parameters if present, else a warning that the stimulus must be rewritten), and the `[compartments]` table: the SR (the free Ca pool with the largest initial value), the junction (the pool exchanging directly with the SR), the sub-sarcolemmal pool, the release channel (dimensionless states coupled both ways to the junction and depending on the SR), its open states, and the INa gates (HH gates named m*, h*, j* or containing "na").
 
 **Gate.** The agent shows the user every row marked *confirm* in `intake.md` and edits `meta.toml` accordingly. Compartment naming is the one thing no heuristic gets right every time, and every block rule downstream depends on it. The agent decides alone: nothing here.
 
 ## Phase 2: structure
 
 ```
-bimgrl structure <model_dir>
+birlm structure <model_dir>
 ```
 
 From the symbolic Jacobian sparsity: the dependency graph, strongly connected components, the cone of influence of V, dead states (f ≡ 0), observer states (nothing depends on them, typically contraction), identical dependency rows (symmetry candidates such as phosphorylated copies), the structurally linear subsystems (Markov chains, linked buffers), the HH gates, and for every state how GRL (exponential wherever the Jacobian diagonal is non-zero) and RL+FE (exponential for HH gates only) advance it. Writes `structure.json`, `structure.md`, `structure.dot`.
@@ -56,8 +56,8 @@ From the symbolic Jacobian sparsity: the dependency graph, strongly connected co
 ## Phase 3: invariants
 
 ```
-bimgrl invariants <model_dir> [--no-numeric]
-bimgrl invariants <model_dir> --adapter cmd:"..." --trace trace.csv [--group a,b,c]   # native path
+birlm invariants <model_dir> [--no-numeric]
+birlm invariants <model_dir> --adapter cmd:"..." --trace trace.csv [--group a,b,c]   # native path
 ```
 
 The stoichiometric analysis of `invariants.md`: Markov chains and binding clusters with their conservation class, the total-ion invariants with their volume-ratio weights, the closures, and the charge bookkeeping of every current in dV/dt. Writes `invariants.json`, `invariants.md`.
@@ -67,7 +67,7 @@ The stoichiometric analysis of `invariants.md`: Markov chains and binding cluste
 ## Phase 4: reference
 
 ```
-bimgrl reference <model_dir> [--protocol A,B] [--beats 10] [--rtol 1e-10] [--atol 1e-12]
+birlm reference <model_dir> [--protocol A,B] [--beats 10] [--rtol 1e-10] [--atol 1e-12]
 ```
 
 LSODA at tight tolerances, cut at every stimulus edge so the solver never sees the discontinuity, with a self-convergence check at ten times tighter tolerances. Protocol A is one window from the model's initial state; protocol B is N beats at the basic cycle length with the last beat compared and the state at every beat start saved for drift. Writes `reference_A.csv/json`, `reference_B.csv/json`, `reference_B_beats.csv`, `reference.md`.
@@ -77,8 +77,8 @@ LSODA at tight tolerances, cut at every stimulus edge so the solver never sees t
 ## Phase 5: stiffness
 
 ```
-bimgrl stiffness <model_dir> [--protocol B] [--beats 2] [--every 1.0] [--threshold -20]
-bimgrl stiffness <model_dir> --adapter cmd:"..." --trace trace.csv   # native path
+birlm stiffness <model_dir> [--protocol B] [--beats 2] [--every 1.0] [--threshold -20]
+birlm stiffness <model_dir> --adapter cmd:"..." --trace trace.csv   # native path
 ```
 
 The Jacobian at the paper's 13 checkpoints plus every millisecond through the last beat; eigenvalues; participation factors $p_{kj} = |V_{kj} W_{jk}|$ normalised per mode; the owners of every mode with Re λ ≤ threshold; the owners' update type under GRL and under RL+FE; the forward Euler limit $2|\mathrm{Re}\,\lambda| / |\lambda|^2$; the P1 prediction (the stiffest mode owned by explicitly advanced states) and the P2 prediction (the largest step at which the linearised scheme step grows no faster than the model, which also sees coupled modes that GRL updates one state at a time). Writes `stiffness.json`, `stiffness.md`; a run at another `--threshold` is a probe and writes `stiffness_t<threshold>.*` instead, so it never replaces the default file that `propose` and `report` read (`propose --threshold` looser than −20 reads the matching probe).
@@ -88,7 +88,7 @@ The Jacobian at the paper's 13 checkpoints plus every millisecond through the la
 ## Phase 6: baseline sweep with the drift monitor
 
 ```
-bimgrl sweep <model_dir> --scheme RL --stability [--dt 0.1,0.05,0.02,0.01,0.005]
+birlm sweep <model_dir> --scheme RL --stability [--dt 0.1,0.05,0.02,0.01,0.005]
 ```
 
 The baseline is RL (the HH gates exponential, everything else forward Euler), the base of BIRL-M; on the paper's GRL path use `--scheme GRL`. The baseline at every allowed step from the coarsest down, each run classified ok / nan / unphysical / budget, compared with the reference on the last beat, and every invariant of phase 3 evaluated at the start of every beat. The `--stability` bisection finds the largest step that runs. Writes rows to `runs.csv` (and `runs_drift.csv` for the per-invariant drift) and `stability.json`.
@@ -98,19 +98,19 @@ The baseline is RL (the HH gates exponential, everything else forward Euler), th
 ## Phase 7: propose blocks
 
 ```
-bimgrl propose <model_dir> [--base rl|grl] [--dt 0.1] [--threshold -20] [--nest-v-markov] [--no-write]
+birlm propose <model_dir> [--base rl|grl] [--dt 0.1] [--threshold -20] [--nest-v-markov] [--no-write]
 ```
 
-The rule engine of `block-rules.md` over the outputs of phases 2, 3 and 5 and the compartments of `meta.toml`. With `--base rl` (default, BIRL-M): the HH gates as `stiff_states`, implicit blocks for every channel or release Markov chain, one calcium block over every Ca-carrying state (merged with any chain that shares a state), the V/INa block, straddling blocks nested, `freeze_boundary_fluxes = true`, and the dyad block as a judgment call. With `--base grl` (BIMGRL): every binding cluster that owns a stiff mode, the SR and the junction joined, the V/INa block, the dyad block. Every block carries the finding that produced it. gotranx's own `suggest-blocks` runs at the target step with the same base for comparison; every difference in the implicit blocks or the V block goes into the judgment calls for Gate 6, with the `BIRL-M-auto` (or `BIMGRL-auto`) sweep that measures both. Writes `<model_dir>/blocks.toml` (unless it exists), `bimgrl/blocks_proposed.toml`, `propose.md`, `propose.json`.
+The rule engine of `block-rules.md` over the outputs of phases 2, 3 and 5 and the compartments of `meta.toml`. With `--base rl` (default, BIRL-M): the HH gates as `stiff_states`, implicit blocks for every channel or release Markov chain, one calcium block over every Ca-carrying state (merged with any chain that shares a state), the V/INa block, straddling blocks nested, `freeze_boundary_fluxes = true`, and the dyad block as a judgment call. With `--base grl` (BIMGRL): every binding cluster that owns a stiff mode, the SR and the junction joined, the V/INa block, the dyad block. Every block carries the finding that produced it. gotranx's own `suggest-blocks` runs at the target step with the same base for comparison; every difference in the implicit blocks or the V block goes into the judgment calls for Gate 6, with the `BIRL-M-auto` (or `BIMGRL-auto`) sweep that measures both. Writes `<model_dir>/blocks.toml` (unless it exists), `birlm/blocks_proposed.toml`, `propose.md`, `propose.json`.
 
-**Gate.** The agent walks the user through `propose.md`: each block and its reason, the "left explicit" list, and the "judgment calls" list (the dyad block under the RL base; the SR in the dyad and Ca-dependent gates such as fCass under the GRL base; a voltage-dependent chain outside the V block). Changes are made in `blocks.toml` and noted in NOTES.md with `bimgrl log --section Blocks --line "..."`.
+**Gate.** The agent walks the user through `propose.md`: each block and its reason, the "left explicit" list, and the "judgment calls" list (the dyad block under the RL base; the SR in the dyad and Ca-dependent gates such as fCass under the GRL base; a voltage-dependent chain outside the V block). Changes are made in `blocks.toml` and noted in NOTES.md with `birlm log --section Blocks --line "..."`.
 
 ## Phase 8: sweep and validate
 
 ```
-bimgrl sweep <model_dir> --scheme RL,BIRL,BIRL-M [--protocol B] [--beats 10] [--dt ...] [--budget 600] [--blocks FILE] [--suggested FILE] [--stability] [--save-traces] [--time] [--force]
-bimgrl codegen <model_dir> [--backend c|cpp|cuda|python|julia|cytozoo] [--scheme RL|BIRL|BIRL-M|GRL|BIGRL|BIMGRL] [--blocks FILE] [-o OUT]
-bimgrl validate <model_dir> --test trace.csv [--reference ref.csv] [--level moderate|tight] [--name NAME]
+birlm sweep <model_dir> --scheme RL,BIRL,BIRL-M [--protocol B] [--beats 10] [--dt ...] [--budget 600] [--blocks FILE] [--suggested FILE] [--stability] [--save-traces] [--time] [--force]
+birlm codegen <model_dir> [--backend c|cpp|cuda|python|julia|cytozoo] [--scheme RL|BIRL|BIRL-M|GRL|BIGRL|BIMGRL] [--blocks FILE] [-o OUT]
+birlm validate <model_dir> --test trace.csv [--reference ref.csv] [--level moderate|tight] [--name NAME]
 ```
 
 The labels: `RL`, `BIRL` (implicit blocks only), `BIRL-M` (all blocks, frozen), `BIRL-M-unfrozen`, `BIRL-M-auto` (the `suggest-blocks` file, `--suggested`) on the RL base; `GRL`, `BIGRL`, `BIMGRL`, `BIMGRL-auto` on the GRL base; `FE`. Each label sets its own base, whatever the blocks file says. The sweep generates and compiles each scheme once per configuration, runs the dt grid coarsest first and stops after two consecutive steps pass the tight thresholds (or at the budget), and records biomarker errors, pass/fail per threshold set, the physical-range check with the first violating states, the invariant drift, and a cost estimate. `codegen` writes the same schemes for the user's own target. `validate` applies the same checks to a trace produced by any code, against `reference_<protocol>.csv`.
@@ -120,7 +120,7 @@ The labels: `RL`, `BIRL` (implicit blocks only), `BIRL-M` (all blocks, frozen), 
 ## Phase 9: tune, at most four rounds
 
 ```
-bimgrl log <model_dir> --round N --change "..." --result "..." --decision "..." [--blocks FILE] [--freeze]
+birlm log <model_dir> --round N --change "..." --result "..." --decision "..." [--blocks FILE] [--freeze]
 ```
 
 Only two things may change between rounds: block membership and trigger tolerances. Each round is one entry in NOTES.md with what changed, the numbers, and the decision. The blocks are frozen (`--freeze` stamps the round into the `blocks.toml` header) before anything is timed.
@@ -130,9 +130,9 @@ Only two things may change between rounds: block membership and trigger toleranc
 ## Phase 10: time and report
 
 ```
-bimgrl time <model_dir> [--scheme RL,BIRL-M] [--protocol B] [--beats 1] [--repeats 5] [--blocks FILE]
-bimgrl sweep <model_dir> --beats 100 --scheme RL,BIRL-M --dt <chosen steps>
-bimgrl report <model_dir> [--protocol B] [--baseline RL] [--new BIRL-M]
+birlm time <model_dir> [--scheme RL,BIRL-M] [--protocol B] [--beats 1] [--repeats 5] [--blocks FILE]
+birlm sweep <model_dir> --beats 100 --scheme RL,BIRL-M --dt <chosen steps>
+birlm report <model_dir> [--protocol B] [--baseline RL] [--new BIRL-M]
 ```
 
 Timing is serial, in C, best of N, one beat; it must run on an idle machine. The 100-beat sweep at the chosen steps confirms that the configuration picked at beat 10 still holds (in the survey, configurations chosen over 10 beats kept the moderate thresholds over 100 beats in 33 of 39 models for BIRL-M and 28 for RL, the failures just above a threshold). The report picks, per scheme and threshold set, the cheapest passing run (not the largest step: heavy sub-stepping can make a larger step slower), the speed-ups at matched accuracy, the measured stability limits against the predictions, the Table-S1 row, and an error-versus-cost figure. Writes `report.md`, `report.json`, `error_vs_cost.png`.
@@ -141,7 +141,7 @@ Timing is serial, in C, best of N, one beat; it must run on an idle machine. The
 
 ## Outputs at a glance
 
-| phase | files under `bimgrl/` |
+| phase | files under `birlm/` |
 |---|---|
 | intake | `intake.md`, `intake.json`, and `../meta.toml` |
 | structure | `structure.json`, `structure.md`, `structure.dot` |

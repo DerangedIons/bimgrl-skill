@@ -1,6 +1,6 @@
 """The sweep: a scheme at every allowed time step, coarsest first, against the reference
 
-Rows go to ``bimgrl/runs.csv`` one at a time; a row that is already there (same scheme,
+Rows go to ``birlm/runs.csv`` one at a time; a row that is already there (same scheme,
 configuration, protocol, dt) is not run again, so an interrupted sweep resumes. A failure is a
 row, never an exception. Protocol B integrates its first N-1 beats saving the state at the
 start of every beat (drift of the slow states and of the invariants), then the last beat on

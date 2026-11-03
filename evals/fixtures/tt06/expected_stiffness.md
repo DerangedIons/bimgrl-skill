@@ -14,4 +14,4 @@
 - RL+FE (exponential for HH gates only): P1 none (no FE-owned stiff mode)
 - forward Euler everywhere: P2 0.002021 ms
 
-P1 is the forward Euler limit 2|Re λ|/|λ|² of the stiffest mode whose owners the scheme advances explicitly. P2 is the largest step at which the linearised scheme step grows no faster than the model, which also sees coupled modes that GRL updates exponentially one state at a time and damps poorly. Verify with `bimgrl sweep --stability`.
+P1 is the forward Euler limit 2|Re λ|/|λ|² of the stiffest mode whose owners the scheme advances explicitly. P2 is the largest step at which the linearised scheme step grows no faster than the model, which also sees coupled modes that GRL updates exponentially one state at a time and damps poorly. Verify with `birlm sweep --stability`.

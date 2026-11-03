@@ -1,6 +1,6 @@
 """Accuracy of a run against the reference: biomarkers, thresholds, the physical range, and
 the drift of every invariant. Works on arrays, so the in-process sweep and the trace-file
-path (`bimgrl validate`) measure exactly alike."""
+path (`birlm validate`) measure exactly alike."""
 
 from __future__ import annotations
 

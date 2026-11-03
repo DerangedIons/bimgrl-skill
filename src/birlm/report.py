@@ -23,7 +23,7 @@ def _f(v):
 def load_runs(ws: Workspace) -> list[dict]:
     path = ws.out / "runs.csv"
     if not path.exists():
-        raise SystemExit(f"{path} not found: run `bimgrl sweep` first")
+        raise SystemExit(f"{path} not found: run `birlm sweep` first")
     with open(path, newline="") as f:
         return list(csv.DictReader(f))
 

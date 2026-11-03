@@ -1,6 +1,6 @@
 # Translating a model to the canonical `.ode`
 
-The deterministic pipeline keys off gotranx's `.ode` form: it gives the symbolic Jacobian, the stoichiometric atoms, the generated schemes and the compiled sweep. A model written in Julia, Python, C or MATLAB is translated into it by the agent and the translation is then proven, not trusted, by `bimgrl fidelity`. A model in CellML needs no translation: `bimgrl convert` does it with myokit.
+The deterministic pipeline keys off gotranx's `.ode` form: it gives the symbolic Jacobian, the stoichiometric atoms, the generated schemes and the compiled sweep. A model written in Julia, Python, C or MATLAB is translated into it by the agent and the translation is then proven, not trusted, by `birlm fidelity`. A model in CellML needs no translation: `birlm convert` does it with myokit.
 
 ## When to translate and when to go native
 
@@ -60,13 +60,13 @@ Two files from the user's own implementation, untouched by the translation:
 
 Optionally a trace of the original code in the trace contract (`contracts.md`), with its run meta saying which solver produced it.
 
-## `bimgrl fidelity`
+## `birlm fidelity`
 
 ```
-bimgrl fidelity <model_dir> --samples rhs_samples.csv --params params.json [--trace trace.csv] [--map translation_map.json] [--rhs-tol 1e-9]
+birlm fidelity <model_dir> --samples rhs_samples.csv --params params.json [--trace trace.csv] [--map translation_map.json] [--rhs-tol 1e-9]
 ```
 
-Three checks, in order, written to `bimgrl/fidelity.md`:
+Three checks, in order, written to `birlm/fidelity.md`:
 
 1. **Parameters.** Every `.ode` default equals the original value after the map's scaling, to 1e-12 relative. Differences are listed by name.
 2. **Pointwise right-hand side.** The `.ode` is compiled to numpy and evaluated at every row of the samples after mapping and scaling; the requirement is $|dy_{ode} - dy_{orig}| \le \text{rhs-tol} \cdot \max(|dy_{orig}|, s_i)$ per state, with $s_i$ the kind scale (1 mV, 1e-3 for a gate, 1e-4 mM). This is the proof. It is independent of any integrator, and a failure localises to a state, and through the atom table to an intermediate.

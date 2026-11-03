@@ -26,15 +26,15 @@ TEMPLATE = """# {name}
 
 ## Structure and invariants
 
-- (see bimgrl/structure.md and bimgrl/invariants.md: chains, binding clusters, flags)
+- (see birlm/structure.md and birlm/invariants.md: chains, binding clusters, flags)
 
 ## Stiffness
 
-- (see bimgrl/stiffness.md: the stiff modes, their owners, the predicted and measured limits)
+- (see birlm/stiffness.md: the stiff modes, their owners, the predicted and measured limits)
 
 ## Blocks
 
-- (the blocks and the rule or finding behind each; see bimgrl/propose.md)
+- (the blocks and the rule or finding behind each; see birlm/propose.md)
 
 ## Tuning log
 

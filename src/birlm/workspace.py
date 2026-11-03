@@ -1,5 +1,5 @@
 """Where a model's files live: ``<model_dir>/model.ode``, ``meta.toml``, ``blocks.toml``,
-``NOTES.md`` and the analysis outputs under ``<model_dir>/bimgrl/``"""
+``NOTES.md`` and the analysis outputs under ``<model_dir>/birlm/``"""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ def _clean(x):
 class Workspace:
     def __init__(self, model_dir: Path):
         self.model_dir = Path(model_dir).resolve()
-        self.out = self.model_dir / "bimgrl"
+        self.out = self.model_dir / "birlm"
         self.out.mkdir(parents=True, exist_ok=True)
         self._model: Model | None = None
         self._meta: ModelMeta | None = None
@@ -61,7 +61,7 @@ class Workspace:
         if self._meta is None:
             path = self.model_dir / "meta.toml"
             if not path.exists():
-                raise SystemExit(f"{path} not found: run `bimgrl intake {self.model_dir}` first")
+                raise SystemExit(f"{path} not found: run `birlm intake {self.model_dir}` first")
             self._meta = load_meta(path)
         return self._meta
 

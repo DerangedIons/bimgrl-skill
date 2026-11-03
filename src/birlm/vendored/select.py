@@ -1,4 +1,4 @@
-# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/select.py), adapted for bimgrl:
+# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/select.py), adapted for birlm:
 # imports made package-relative; no other changes unless noted below.
 """The fastest configuration of each scheme that meets each set of thresholds
 

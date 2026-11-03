@@ -1,4 +1,4 @@
-# Where `bimgrl setup` installs gotranx from. The block_rush_larsen scheme, suggest-blocks and
+# Where `birlm setup` installs gotranx from. The block_rush_larsen scheme, suggest-blocks and
 # the symbolic Jacobian live in the DerangedIons fork until they are upstreamed; switch this to
 # the public release ("gotranx>=X") when that happens. GOTRANX_SRC=/path/to/clone overrides it.
 gotranx_spec = "git+ssh://git@github.com/DerangedIons/gotranx-private@e30efec"

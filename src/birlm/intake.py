@@ -171,7 +171,7 @@ def draft_meta(model_dir: Path, voltage: str | None = None) -> tuple[ModelMeta, 
             meta.protocol = "paced"
             evidence["stimulus"] = (
                 f"symbols named like a stimulus: {stimmy}; the stimulus must be rewritten to the "
-                "half-open stim_* parameters (bimgrl convert --stimulus or references/contracts.md)"
+                "half-open stim_* parameters (birlm convert --stimulus or references/contracts.md)"
             )
         else:
             meta.protocol = "autorhythmic"
@@ -194,7 +194,7 @@ def _hh_gates(ode, jac) -> list[str]:
 def to_markdown(meta: ModelMeta, info: dict) -> str:
     ev = info["evidence"]
     out = [f"# Intake of `{meta.id}`", ""]
-    out.append("Draft `meta.toml` written. Confirm every row marked *confirm* before `bimgrl propose`.")
+    out.append("Draft `meta.toml` written. Confirm every row marked *confirm* before `birlm propose`.")
     out += ["", "## Guesses and their evidence", ""]
     rows = [
         ["voltage", meta.voltage, ev.get("voltage", "")],

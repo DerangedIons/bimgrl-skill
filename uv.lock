@@ -7,7 +7,7 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "bimgrl"
+name = "birlm"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [

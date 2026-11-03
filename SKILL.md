@@ -1,5 +1,5 @@
 ---
-name: bimgrl
+name: birlm
 description: Accelerate the fixed-step integration of a cardiac cell model with gotranx's block_rush_larsen scheme, by default BIRL-M (Rush-Larsen base, implicit and multirate blocks, frozen boundary fluxes, as in the blocked-rush-larsen 40-model survey), or BIMGRL (generalized Rush-Larsen base) from the paper "Targeted implicit integration accelerates tissue simulations of advanced cardiac cell models". Deterministic scripts do the analysis (Jacobian eigenmodes with participation factors, conservation-law and charge-bookkeeping checks, dependency structure, block proposal by rule, gotranx code generation, dt sweeps against an LSODA reference with biomarker thresholds); the agent confirms compartments, reviews blocks and tunes tolerances. Use when asked to speed up, stabilise, or find the stiffness or time-step limit of a cardiac (or any stiff biochemical) cell model in CellML, gotranx .ode, Julia, Python, C or MATLAB, to apply BIRL-M, BIMGRL, RL or GRL blocks, to choose blocks for tissue or GPU runs, to check whether a model's Markov chains and buffers conserve what they should, or to reproduce the survey for a new model.
 license: MIT
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
@@ -8,7 +8,7 @@ metadata:
   paper: "Targeted implicit integration accelerates tissue simulations of advanced cardiac cell models"
 ---
 
-# bimgrl: apply block Rush-Larsen (BIRL-M, BIMGRL) to a cardiac cell model
+# birlm: apply block Rush-Larsen (BIRL-M, BIMGRL) to a cardiac cell model
 
 ## What this is
 
@@ -23,10 +23,10 @@ This skill turns the paper's workflow into scripts. The scripts do every measure
 ```
 cd <skill-dir>
 uv venv .venv && uv pip install --python .venv/bin/python -e .
-uv run --directory <skill-dir> bimgrl setup      # gotranx from config.toml, feat/block-rush-larsen @ e30efec or later (or GOTRANX_SRC=/path/to/clone)
+uv run --directory <skill-dir> birlm setup      # gotranx from config.toml, feat/block-rush-larsen @ e30efec or later (or GOTRANX_SRC=/path/to/clone)
 ```
 
-`<skill-dir>` is the directory of this file. Every command below is `uv run --directory <skill-dir> bimgrl <command> <model_dir> [flags]`; `<model_dir>` holds `model.ode`, `meta.toml`, `blocks.toml`, `NOTES.md`, and the outputs under `<model_dir>/bimgrl/`. A C compiler is needed for the sweep (`CC`, else gcc); Julia 1.10+ only for the Julia on-ramp (`scripts/jl`).
+`<skill-dir>` is the directory of this file. Every command below is `uv run --directory <skill-dir> birlm <command> <model_dir> [flags]`; `<model_dir>` holds `model.ode`, `meta.toml`, `blocks.toml`, `NOTES.md`, and the outputs under `<model_dir>/birlm/`. A C compiler is needed for the sweep (`CC`, else gcc); Julia 1.10+ only for the Julia on-ramp (`scripts/jl`).
 
 ## The two paths
 
@@ -42,7 +42,7 @@ Run the phases in order; each prints a Markdown report and leaves a JSON for the
 ### 0. Intake
 
 ```
-bimgrl intake <model_dir> [--voltage V]
+birlm intake <model_dir> [--voltage V]
 ```
 
 Drafts `meta.toml` from the equations: membrane potential, cytosolic Ca/Na/K, the Ca compartments (SR, junction/dyad, sub-sarcolemma), the release-channel states and their open states, the INa gates, the stimulus. Every guess carries its evidence.
@@ -52,7 +52,7 @@ Drafts `meta.toml` from the equations: membrane potential, cytosolic Ca/Na/K, th
 ### 1. Structure
 
 ```
-bimgrl structure <model_dir>
+birlm structure <model_dir>
 ```
 
 Dependency graph from the symbolic Jacobian sparsity: strongly connected components, what feeds V, dead and observer states, duplicate dependency rows (phosphorylated copies), structurally linear subsystems (chains, buffer pairs), and how GRL (exponential wherever the diagonal is non-zero) and RL+FE (gates only) advance each state. No gate; read `structure.md` once so the later reports make sense.
@@ -60,7 +60,7 @@ Dependency graph from the symbolic Jacobian sparsity: strongly connected compone
 ### 2. Invariants and conservation checks
 
 ```
-bimgrl invariants <model_dir>
+birlm invariants <model_dir>
 ```
 
 From the stoichiometry of the equations (not the Jacobian): every Markov chain and binding cluster with its weights and class (`exact`, `conserved-internally`, `closure`, `improper`), the total-ion invariants with their volume-ratio weights (`exact`, `boundary`), the algebraic closures, and the charge bookkeeping of every current in dV/dt. Read `references/invariants.md` to interpret it.
@@ -70,7 +70,7 @@ From the stoichiometry of the equations (not the Jacobian): every Markov chain a
 ### 3. Reference
 
 ```
-bimgrl reference <model_dir> [--beats 10] [--protocol A,B]
+birlm reference <model_dir> [--beats 10] [--protocol A,B]
 ```
 
 LSODA at rtol 1e-10 / atol 1e-12, cut at the stimulus edges, with a self-convergence check; written in the trace contract. If `self-convergence max |dV|` is above 1e-5 mV, say so: every error below is measured against this.
@@ -78,7 +78,7 @@ LSODA at rtol 1e-10 / atol 1e-12, cut at the stimulus edges, with a self-converg
 ### 4. Stiffness
 
 ```
-bimgrl stiffness <model_dir> [--every 1] [--threshold -20]
+birlm stiffness <model_dir> [--every 1] [--threshold -20]
 ```
 
 Eigenmodes and participation factors at the paper's 13 checkpoints plus every 1 ms through a beat; the Table-1 view by owner set with the update type of each owner under GRL and under RL+FE; the predicted limits P1 (forward-Euler limit of the stiffest explicitly stepped mode) and P2 (linearised step). Report the three or four stiffest owner sets in words: which modes bind, and whether their owners are stepped explicitly. Under the RL base (the default) every non-gate owner is stepped explicitly, so each stiff non-gate owner set is a block to come. The prediction is checked against the measured limit in phase 6.
@@ -86,7 +86,7 @@ Eigenmodes and participation factors at the paper's 13 checkpoints plus every 1 
 ### 5. Baseline
 
 ```
-bimgrl sweep <model_dir> --scheme RL --stability          # GRL path: --scheme GRL
+birlm sweep <model_dir> --scheme RL --stability          # GRL path: --scheme GRL
 ```
 
 The baseline from the coarsest allowed step down, with the stability limit bisected, biomarkers against the reference, the physical-range check, and the drift of every invariant per beat. Three things to read off: the measured limit against the phase-4 prediction (RL+FE P1 for RL, GRL P1/P2 for GRL; agreement within a factor of ~1.5 confirms the mode diagnosis); a run that is `ok` but carries a `DRIFT` flag (a chain or a Ca total leaking), which is the "runs but gives the wrong answer" case that needs an implicit block even if nothing crashes; and the step at which the baseline meets the moderate thresholds, the number BIRL-M has to beat.
@@ -94,7 +94,7 @@ The baseline from the coarsest allowed step down, with the stability limit bisec
 ### 6. Propose blocks
 
 ```
-bimgrl propose <model_dir> [--base rl|grl] [--dt 0.1] [--nest-v-markov]
+birlm propose <model_dir> [--base rl|grl] [--dt 0.1] [--nest-v-markov]
 ```
 
 Applies the rules of the base (`references/block-rules.md`) to the findings. RL base (default, BIRL-M): the HH gates as `stiff_states`, chains of channels and of the release channel, one calcium block over every Ca-carrying state (merged with any chain sharing a state), V with the INa gates (proportional, atol 0.5 mV), nesting, `freeze_boundary_fluxes = true`, and no dyad block. GRL base (BIMGRL): chains, binding clusters that own a stiff mode, SR joined with the junction so the release conserves, the V block, the dyad (binary, triggers on the junctional Ca and the open states), nesting. Every block carries the finding that produced it; gotranx's own `suggest-blocks` is run with the same base for comparison; `validate_blocks` checks the file. The file is complete: `gotranx ode2c --scheme block_rush_larsen --blocks blocks.toml` needs nothing else.
@@ -104,18 +104,18 @@ Applies the rules of the base (`references/block-rules.md`) to the findings. RL 
 ### 7. Sweep and validate
 
 ```
-bimgrl sweep <model_dir> --scheme RL,BIRL,BIRL-M [--dt 0.5,0.2,0.1,0.05,0.02,0.01,0.005] [--save-traces]
+birlm sweep <model_dir> --scheme RL,BIRL,BIRL-M [--dt 0.5,0.2,0.1,0.05,0.02,0.01,0.005] [--save-traces]
 ```
 
-Every scheme at every allowed step (1-2-5 per decade, dividing the stimulus edges and the 0.1 ms grid), coarsest first, stopping after two consecutive tight passes; status `ok | nan | unphysical | budget`, errors in Vpeak, APD90, CaT amplitude, activation time, pass/fail for the moderate and tight sets, invariant drift, and the first state to leave its range when a run fails. BIRL (implicit blocks only) isolates what the implicit step bought; BIRL-M adds the sub-steps; `BIRL-M-unfrozen` measures what freezing cost or saved. Each label sets its own base, whatever the file says; for the paper's path sweep `GRL,BIGRL,BIMGRL` with a file from `propose --base grl` (`--blocks FILE`). For a scheme implemented elsewhere (native path), run its trace through `bimgrl validate <model_dir> --test trace.csv` instead; the metrics are the same code.
+Every scheme at every allowed step (1-2-5 per decade, dividing the stimulus edges and the 0.1 ms grid), coarsest first, stopping after two consecutive tight passes; status `ok | nan | unphysical | budget`, errors in Vpeak, APD90, CaT amplitude, activation time, pass/fail for the moderate and tight sets, invariant drift, and the first state to leave its range when a run fails. BIRL (implicit blocks only) isolates what the implicit step bought; BIRL-M adds the sub-steps; `BIRL-M-unfrozen` measures what freezing cost or saved. Each label sets its own base, whatever the file says; for the paper's path sweep `GRL,BIGRL,BIMGRL` with a file from `propose --base grl` (`--blocks FILE`). For a scheme implemented elsewhere (native path), run its trace through `birlm validate <model_dir> --test trace.csv` instead; the metrics are the same code.
 
 ### 8. Tune (at most four rounds)
 
 Read the failures: a Vpeak overshoot at large steps is the under-resolved upstroke (V-block trigger atol, 0.5 → 0.1); a CaT error that grows with the step under the RL base means the release is under-resolved and the dyad block (from the judgment calls) is worth a round; under the GRL base, a CaT error that grows with the step and a release leak that cancels it at one step (the T-World round-2 story) means the SR belongs in the dyad; a stiff non-gate state outside every block under the RL base (it shows as the first state to leave its range) needs a block; a chain state going negative at the largest step means the chain nests in the V block; a `DRIFT` flag on a scheme with blocks means a block boundary cuts an exchange. Propose one change, have the user confirm, edit `blocks.toml`, and record it:
 
 ```
-bimgrl log <model_dir> --round N --change "..." --result "..." --decision "adopted|rejected: why" [--freeze]
-bimgrl sweep <model_dir> --scheme BIRL-M --force
+birlm log <model_dir> --round N --change "..." --result "..." --decision "adopted|rejected: why" [--freeze]
+birlm sweep <model_dir> --scheme BIRL-M --force
 ```
 
 **Gate 8** (every round): the change and its reason before the edit; the numbers before the decision. Stop after four rounds or when the moderate thresholds hold at a step at least ten times the baseline's; `--freeze` stamps the round into `blocks.toml`. Blocks are frozen before any timing.
@@ -123,10 +123,10 @@ bimgrl sweep <model_dir> --scheme BIRL-M --force
 ### 9. Time and report
 
 ```
-bimgrl sweep <model_dir> --scheme RL,BIRL-M --beats 100 --dt <chosen steps>
-bimgrl time <model_dir> --scheme RL,BIRL,BIRL-M
-bimgrl report <model_dir>                          # GRL path: --baseline GRL (compares BIMGRL)
-bimgrl codegen <model_dir> --backend c|cpp|cuda|python|julia|cytozoo --scheme BIRL-M
+birlm sweep <model_dir> --scheme RL,BIRL-M --beats 100 --dt <chosen steps>
+birlm time <model_dir> --scheme RL,BIRL,BIRL-M
+birlm report <model_dir>                          # GRL path: --baseline GRL (compares BIMGRL)
+birlm codegen <model_dir> --backend c|cpp|cuda|python|julia|cytozoo --scheme BIRL-M
 ```
 
 The 100-beat run confirms the configuration chosen at beat 10 still holds (in the survey, 33 of 39 models kept the moderate thresholds over 100 beats with BIRL-M and 28 with RL, the failures just above a threshold). `time` measures the cost per beat in C, best of five, on one core; `report` picks the cheapest passing run of each scheme (not the largest step: with sub-steps a larger step can be slower, BIRL-M in T-World took 15 ms per beat at dt 0.1 and 50 at 0.5), the speed-ups at both threshold sets, the measured against the predicted stability limits, the Table-S1 row and an error-vs-cost figure. `codegen` emits the chosen scheme for the user's target. When the target is tissue or a GPU, read `references/tissue-and-backends.md` before handing back: the splitting, not the cell model, limits dt there, and a sub-step block that pays in one cell (the dyad) can cost at every step. Hand back `report.md`, the frozen `blocks.toml`, `NOTES.md`, and a paragraph in the paper's style (which modes limited the step, which blocks removed them, the speed-up at matched accuracy).

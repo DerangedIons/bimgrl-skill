@@ -61,7 +61,7 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
     structure = ws.read_json("structure.json")
     inv = ws.read_json("invariants.json")
     # the default file holds every mode at or below the default threshold, so a stricter threshold
-    # filters it; a looser one needs the probe written by `bimgrl stiffness --threshold` at that value
+    # filters it; a looser one needs the probe written by `birlm stiffness --threshold` at that value
     stiff_file = f"{stiffness.artifact(max(stiff_threshold, stiffness.THRESHOLD))}.json"
     stiff = ws.read_json(stiff_file) if (ws.out / stiff_file).exists() else None
     feeds_v = set(structure["feeds_v"]) | {structure["voltage"]}
@@ -116,7 +116,7 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
                 notes.append(f"binding cluster {', '.join(members)} owns no stiff mode (threshold {stiff_threshold:g} /ms): left explicit")
         if stiff is None:
             probe = "" if stiff_threshold <= stiffness.THRESHOLD else f" --threshold {stiff_threshold:g}"
-            judgment.append(f"no {stiff_file}: every binding cluster was treated as non-stiff; run `bimgrl stiffness{probe}` first")
+            judgment.append(f"no {stiff_file}: every binding cluster was treated as non-stiff; run `birlm stiffness{probe}` first")
 
         # 3. SR + junction share a block
         if sr and junc:
@@ -235,8 +235,8 @@ def propose(ws: Workspace, dt: float = 0.1, stiff_threshold: float = -20.0, nest
         judgment += [f"gotranx suggest-blocks disagrees: {d}" for d in differ]
         if differ:
             labels = "BIRL-M,BIRL-M-auto" if base == "rl" else "BIMGRL,BIMGRL-auto"
-            judgment.append(f"to settle the gotranx disagreements on numbers, `bimgrl sweep <model_dir> --scheme {labels} "
-                            f"--suggested <model_dir>/bimgrl/blocks_suggested_dt{dt:g}.toml` measures both block sets")
+            judgment.append(f"to settle the gotranx disagreements on numbers, `birlm sweep <model_dir> --scheme {labels} "
+                            f"--suggested <model_dir>/birlm/blocks_suggested_dt{dt:g}.toml` measures both block sets")
 
     stiff_states = None
     if base == "rl":
@@ -278,7 +278,7 @@ def _substep_toml(s: dict) -> list[str]:
 
 def render_toml(implicit, substep, model_id: str, round_: int, base: str = "grl", stiff_states=None) -> str:
     rules = "the RL-base rules (BIRL-M)" if base == "rl" else "the paper's GRL-base rules (BIMGRL)"
-    lines = [f"# Blocks for {model_id} (round {round_}; see NOTES.md), proposed by bimgrl propose from", f"# {rules}; every block carries the finding that produced it.", ""]
+    lines = [f"# Blocks for {model_id} (round {round_}; see NOTES.md), proposed by birlm propose from", f"# {rules}; every block carries the finding that produced it.", ""]
     if base == "rl":
         lines += ["# The RL base: the Hodgkin-Huxley gates are updated exponentially, every other state by forward",
                   "# Euler unless it is in an implicit block", 'base_scheme = "rush_larsen"', f"stiff_states = {_toml_list(stiff_states or [])}",

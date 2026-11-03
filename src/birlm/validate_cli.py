@@ -1,4 +1,4 @@
-"""`bimgrl validate`: a trace file from any language against a reference trace, with the same
+"""`birlm validate`: a trace file from any language against a reference trace, with the same
 biomarkers, thresholds, physical-range and invariant-drift checks as the sweep"""
 
 from __future__ import annotations

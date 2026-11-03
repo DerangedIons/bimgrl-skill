@@ -7,7 +7,7 @@ What the blocks have to cover depends on the base scheme, the update of every st
 - **RL base (BIRL-M, the default).** Rush–Larsen updates only the Hodgkin–Huxley gates exponentially and every other state by forward Euler. Cheap per step, but forward Euler limits the step wherever a non-gate state is stiff (Ca pools and buffers, Markov chains, V in the upstroke), so *every* such state needs a block. This is the scheme of the blocked-rush-larsen survey (40 models, 2026-11-01).
 - **GRL base (BIMGRL, the paper).** Generalized Rush–Larsen updates every state with a linear self-term exponentially, so a lone stiff pool is already handled and only the coupled groups need blocks. Each step costs more (an exponential per state), and the per-state exponential on an exchange pair leaks the pair's invariant.
 
-`bimgrl propose` applies the RL-base rules by default and the GRL-base rules with `--base grl`.
+`birlm propose` applies the RL-base rules by default and the GRL-base rules with `--base grl`.
 
 ## The rules, RL base (BIRL-M)
 
@@ -37,7 +37,7 @@ Under either base the blocks are chosen on the same protocol they are tested on,
 
 ## blocks.toml
 
-A BIRL-M file carries its base at the top, so `gotranx ode2c --scheme block_rush_larsen --blocks blocks.toml` (or any other backend) needs nothing else; the GRL-base file below omits it, as GRL is gotranx's default. `bimgrl sweep` sets the base from the scheme label, so the same file can be swept under either (`BIMGRL` ignores the base keys).
+A BIRL-M file carries its base at the top, so `gotranx ode2c --scheme block_rush_larsen --blocks blocks.toml` (or any other backend) needs nothing else; the GRL-base file below omits it, as GRL is gotranx's default. `birlm sweep` sets the base from the scheme label, so the same file can be swept under either (`BIMGRL` ignores the base keys).
 
 ```toml
 # BIRL-M for a TT06-like model (illustrative: `propose` writes the actual lists)
@@ -104,7 +104,7 @@ The same tables may live under `[tool.gotranx]` in a `pyproject.toml`; a file wi
 | dyad `h_min` | 0.005 ms | finer release, more cost per beat | release under-resolved at coarse dt |
 | stiffness threshold for blocking a buffer cluster | −20 /ms | more clusters implicit, more cost, no accuracy gain if the mode was not limiting | a stiff cluster left explicit, which brings the stability limit back |
 
-## What `bimgrl propose` automates and what it leaves to you
+## What `birlm propose` automates and what it leaves to you
 
 RL base (default): the stiff states (the HH gates outside the implicit blocks), the channel and release chains (rule 4), the one calcium block (rule 3) from the confirmed Ca pools, the total-Ca networks through them in `invariants.json` and their binding clusters, merged with any chain that shares a state, the V block (rule 2), nesting (rule 7), and the base keys. gotranx `suggest-blocks` runs with `--base-scheme rush_larsen --freeze-boundary-fluxes`. Left to judgment: the dyad block (rule 5, written out under "Judgment calls"), nesting a voltage-dependent chain in the V block, every disagreement with `suggest-blocks` (settle it with `BIRL-M,BIRL-M-auto`), and every tolerance change. `suggest-blocks` is a starting point, not a guarantee: in the survey it was the best choice in T-World and a few other models, and about 2× slower than the curated blocks on average.
 

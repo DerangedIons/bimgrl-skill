@@ -153,7 +153,7 @@ def to_markdown(r: dict) -> str:
     out.append(f"- forward Euler everywhere: P2 {p['p2_fe']['limit_ms']:.4g} ms")
     out += ["", "P1 is the forward Euler limit 2|Re λ|/|λ|² of the stiffest mode whose owners the scheme advances explicitly. "
             "P2 is the largest step at which the linearised scheme step grows no faster than the model, which also sees coupled modes "
-            "that GRL updates exponentially one state at a time and damps poorly. Verify with `bimgrl sweep --stability`."]
+            "that GRL updates exponentially one state at a time and damps poorly. Verify with `birlm sweep --stability`."]
     return "\n".join(out)
 
 

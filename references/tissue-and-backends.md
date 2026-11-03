@@ -29,7 +29,7 @@ Tissue with the RL base has only been tried in the 2D example; the larger tissue
 
 ## GPUs and other backends
 
-Every gotranx code generator takes `--scheme block_rush_larsen --blocks <file>`; `bimgrl codegen --backend` wraps the ones marked.
+Every gotranx code generator takes `--scheme block_rush_larsen --blocks <file>`; `birlm codegen --backend` wraps the ones marked.
 
 | backend | command | sub-step blocks |
 |---|---|---|

@@ -1,4 +1,4 @@
-# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/stiffness.py), adapted for bimgrl:
+# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/stiffness.py), adapted for birlm:
 # imports made package-relative; no other changes unless noted below.
 """Stiffness of a model along its reference solution
 

@@ -1,6 +1,6 @@
 # Biomarkers, thresholds, the dt grid and the cost
 
-## Biomarkers (`src/bimgrl/vendored/features.py`)
+## Biomarkers (`src/birlm/vendored/features.py`)
 
 Computed on the compared window: all of protocol A, the last beat of protocol B, on a 0.1 ms grid (or the scheme's step if coarser). The reference is evaluated at the same times, so the reference and the scheme are measured alike.
 
@@ -35,6 +35,6 @@ The stability limit of an explicit scheme (`--stability`) is bisected between th
 
 ## Cost
 
-Cost is the time per beat spent in the stepping loop in compiled C (`gcc -O3 -march=native`), timed with `clock_gettime`, one thread, best of 5 (`bimgrl time`), on an idle machine. The sweep's rows carry a calibration estimate (seconds per step from 2000 steps) until they are timed; the report says which it used.
+Cost is the time per beat spent in the stepping loop in compiled C (`gcc -O3 -march=native`), timed with `clock_gettime`, one thread, best of 5 (`birlm time`), on an idle machine. The sweep's rows carry a calibration estimate (seconds per step from 2000 steps) until they are timed; the report says which it used.
 
 The report chooses, per scheme and threshold set, the **cheapest passing run, not the largest passing step**: heavy sub-stepping can make a larger step slower than a smaller one. The speed-up is the ratio of the baseline's cost to the scheme's at the same threshold set; "RL fails" (or "GRL fails") means the baseline met the set at no step. Choose by measured time in C, not the largest step: in T-World BIRL-M took 15 ms per beat at dt 0.1 and 50 at dt 0.5.

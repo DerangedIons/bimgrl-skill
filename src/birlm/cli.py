@@ -1,4 +1,4 @@
-"""``bimgrl <command> <model_dir> [options]``: the deterministic steps of the skill"""
+"""``birlm <command> <model_dir> [options]``: the deterministic steps of the skill"""
 
 from __future__ import annotations
 
@@ -149,7 +149,7 @@ def main(argv=None):
     from .codegen import BACKENDS
     from .stepper import SCHEMES
 
-    parser = argparse.ArgumentParser(prog="bimgrl", description=__doc__)
+    parser = argparse.ArgumentParser(prog="birlm", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("setup", help="install gotranx into the skill environment from config.toml")
@@ -259,7 +259,7 @@ def main(argv=None):
     p = sub.add_parser("validate", help="validate a trace file (any language) against a reference trace")
     p.add_argument("model_dir")
     p.add_argument("--test", required=True, help="trace .csv with its .json run meta")
-    p.add_argument("--reference", default=None, help="reference trace .csv (default bimgrl/reference_<protocol>.csv)")
+    p.add_argument("--reference", default=None, help="reference trace .csv (default birlm/reference_<protocol>.csv)")
     p.add_argument("--level", default="moderate", choices=["moderate", "tight"])
     p.add_argument("--name", default=None)
     p.set_defaults(func=cmd_validate)

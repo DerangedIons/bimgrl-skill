@@ -1,4 +1,4 @@
-# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/stimulus.py), adapted for bimgrl:
+# Vendored from DerangedIons/blocked-rush-larsen @ 58af805 (cell_model_survey/survey/stimulus.py), adapted for birlm:
 # imports made package-relative; no other changes unless noted below.
 """The stimulus of the survey: a half-open interval in every period
 
